@@ -1,6 +1,6 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
-import 'package:http/http.dart' as http;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -8,11 +8,13 @@ import 'package:gnml/Helper/redirect.dart';
 import 'package:gnml/Helper/theme_helper.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:gnml/Helper/window_helper.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:updat/updat_window_manager.dart';
+import 'package:updat/updat.dart';
 import 'package:window_manager/window_manager.dart';
 import 'firebase_options.dart';
+import 'package:http/http.dart' as http;
 
 Future<void> main() async {
   await dotenv.load(fileName: ".env");

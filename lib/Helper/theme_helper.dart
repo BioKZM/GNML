@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeProvider extends ChangeNotifier {
-  bool _isLightTheme = false;
+  // final bool _isLightTheme = false;
   int _themeColor = const Color.fromARGB(255, 180, 0, 0).value;
 
   ThemeProvider() {
     getTheme();
   }
 
-  bool get isDark => _isLightTheme;
+  // bool get isDark => _isLightTheme;
   int get color => _themeColor;
 
   Future setColor(color) async {

@@ -67,7 +67,14 @@ class _BooksDetailPageState extends State<BooksDetailPage> {
         future: BooksPageLogic().searchBooks(widget.bookID),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
-            var data = snapshot.data?[0];
+            var data;
+            for (var x in snapshot.data!.toList()) {
+              if (x.id?.split("/").last == widget.bookID) {
+                data = x;
+              } else {
+                data = snapshot.data?[0];
+              }
+            }
             String? description = data?.description;
             description = utf8
                 .decode(data!.description.toString().runes.toList(),
@@ -99,16 +106,6 @@ class _BooksDetailPageState extends State<BooksDetailPage> {
                       boolean = true;
                     }
                     return Scaffold(
-                      // appBar: AppBar(
-                      //   title: const Text("Book Details"),
-                      //   backgroundColor: Colors.transparent,
-                      //   leading: IconButton(
-                      //     icon: const Icon(Icons.arrow_back),
-                      //     onPressed: () {
-                      //       Navigator.of(context).pop();
-                      //     },
-                      //   ),
-                      // ),
                       body: Container(
                         decoration: BoxDecoration(
                           image: DecorationImage(

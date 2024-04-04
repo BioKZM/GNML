@@ -1,7 +1,13 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gnml/UI/homepage.dart';
 import 'package:gnml/UI/Authentication/login_page.dart';
+import 'package:updat/theme/chips/floating_with_silent_download.dart';
+import 'package:updat/updat_window_manager.dart';
+import 'package:http/http.dart' as http;
 
 class Redirect extends StatefulWidget {
   const Redirect({Key? key}) : super(key: key);
@@ -34,5 +40,28 @@ class _RedirectState extends State<Redirect> {
     //     }
     //   },
     // );
+  }
+}
+
+String get platformExt {
+  switch (Platform.operatingSystem) {
+    case 'windows':
+      {
+        return 'exe';
+      }
+
+    case 'macos':
+      {
+        return 'dmg';
+      }
+
+    case 'linux':
+      {
+        return 'AppImage';
+      }
+    default:
+      {
+        return 'zip';
+      }
   }
 }

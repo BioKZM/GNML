@@ -955,6 +955,7 @@ class _GamesPageState extends State<GamesPage> {
                                               SizedBox(
                                                 height: 950,
                                                 child: PageView.builder(
+                                                    itemCount: totalPages,
                                                     controller:
                                                         pageControllerComingSoon,
                                                     itemBuilder:
@@ -969,6 +970,7 @@ class _GamesPageState extends State<GamesPage> {
                                                         endIndex.clamp(
                                                             0, data.length),
                                                       );
+                                                      // print(pageData.length);
 
                                                       return GridView.builder(
                                                         gridDelegate:
@@ -1435,6 +1437,7 @@ class _GamesPageState extends State<GamesPage> {
                                               SizedBox(
                                                 height: 950,
                                                 child: PageView.builder(
+                                                    itemCount: totalPages,
                                                     controller:
                                                         pageControllerMostlyAnticipated,
                                                     itemBuilder:

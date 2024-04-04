@@ -1344,6 +1344,8 @@ class _SearchPageState extends State<SearchPage> {
                                             .id
                                             .toString()
                                             .substring(7);
+                                        print(bookID);
+                                        print(data[index].title);
 
                                         return MouseRegion(
                                           onEnter: (event) =>
