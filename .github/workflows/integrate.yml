@@ -1,6 +1,16 @@
-              
-- name: Flutter action
+name: Flutter action
+on:
+  pull_request:
+    branches: [ main ]
 
-
-              
-  uses: subosito/flutter-action@v2.16.0
+jobs:
+  main:
+    runs-on: windows-latest
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter build windows
