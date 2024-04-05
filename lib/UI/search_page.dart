@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
@@ -33,6 +34,7 @@ class _SearchPageState extends State<SearchPage> {
   bool boolean = false;
   Buttons buttonView = Buttons.games;
   TextEditingController searchController = TextEditingController();
+  late PageController searchGamesController;
   String searchText = "";
   int pageIndexMovies = 1;
   int pageIndexSeries = 1;
@@ -67,6 +69,14 @@ class _SearchPageState extends State<SearchPage> {
     };
 
     await documentReference.update(updatedData);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    searchGamesController = PageController(
+      initialPage: 0,
+    );
   }
 
   @override
@@ -168,6 +178,8 @@ class _SearchPageState extends State<SearchPage> {
                           List booksList = list['library']['books'];
                           List actorsList = list['library']['actors'];
                           return StatefulBuilder(builder: (context, snapshot) {
+                            ValueNotifier<int> pageIndex =
+                                ValueNotifier<int>(1);
                             if (buttonView == Buttons.games) {
                               return FutureBuilder(
                                 future: GamePageLogic().searchGames(searchText),
@@ -176,113 +188,391 @@ class _SearchPageState extends State<SearchPage> {
                                       snapshot.connectionState ==
                                           ConnectionState.done) {
                                     var data = snapshot.data;
-                                    return ListView.builder(
-                                      itemCount: data?.length,
-                                      itemBuilder: (context, index) {
-                                        // ignore: prefer_typing_uninitialized_variables
-                                        var dateTime;
-                                        if (data![index].first_release_date ==
-                                            0) {
-                                          dateTime = "Unknown";
-                                        } else {
-                                          dateTime = DateTime
-                                              .fromMillisecondsSinceEpoch(
-                                                  data[index]
-                                                          .first_release_date! *
-                                                      1000);
-                                          dateTime = DateFormat('yyyy')
-                                              .format(dateTime);
-                                        }
+                                    int totalPages = (data!.length / 15).ceil();
+                                    return Column(
+                                      children: [
+                                        Expanded(
+                                          child: SizedBox(
+                                            child: PageView.builder(
+                                                controller:
+                                                    searchGamesController,
+                                                itemCount: totalPages,
+                                                itemBuilder:
+                                                    (context, int index) {
+                                                  final int startIndex =
+                                                      index * 15;
+                                                  final int endIndex =
+                                                      (index + 1) * 15;
+                                                  final pageData = data.sublist(
+                                                    startIndex,
+                                                    endIndex.clamp(
+                                                        0, data.length),
+                                                  );
+                                                  return GridView.builder(
+                                                    gridDelegate:
+                                                        const SliverGridDelegateWithMaxCrossAxisExtent(
+                                                            maxCrossAxisExtent:
+                                                                350),
+                                                    shrinkWrap: true,
+                                                    itemCount: pageData.length,
+                                                    itemBuilder:
+                                                        (context, innerIndex) {
+                                                      ValueNotifier<bool>
+                                                          isHovering =
+                                                          ValueNotifier<bool>(
+                                                              false);
+                                                      ValueNotifier<bool>
+                                                          isFavorite =
+                                                          ValueNotifier<bool>(
+                                                              false);
 
-                                        List<Widget> platformsWidget = [];
-                                        if (data[index].platforms != null) {
-                                          for (var x = 0;
-                                              x < data[index].platforms!.length;
-                                              x++) {
-                                            platformsWidget.add(
-                                              Text(
-                                                  "${data[index].platforms![x]['name']}"),
-                                            );
-                                            platformsWidget
-                                                .add(const VerticalDivider());
-                                          }
-                                        }
-                                        var gameID = 0;
-                                        if (data[index].id != null) {
-                                          gameID = data[index].id!;
-                                        }
-
-                                        return GestureDetector(
-                                          onTap: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    GameDetailPage(
-                                                        gameID: gameID),
-                                              ),
-                                            );
-                                          },
-                                          child: Column(
-                                            children: [
-                                              ListTile(
-                                                leading: SizedBox(
-                                                  width: 40,
-                                                  height: double.maxFinite,
-                                                  child: Image(
-                                                    fit: BoxFit.fill,
-                                                    image: NetworkImage(
-                                                      """https://${data[index].url}""",
-                                                    ),
-                                                  ),
-                                                ),
-                                                title: Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                          left: 4),
-                                                  child: Text(
-                                                    "${data[index].name.toString()} (${(dateTime.toString())})",
-                                                    style: const TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.bold),
-                                                  ),
-                                                ),
-                                                subtitle: Column(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.start,
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Padding(
-                                                      padding:
-                                                          const EdgeInsets.only(
-                                                              left: 4.0),
-                                                      child: Wrap(
-                                                          children:
-                                                              platformsWidget),
-                                                    ),
-                                                    Row(
-                                                      children: [
-                                                        Padding(
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .only(
-                                                                  top: 4.0),
-                                                          child:
-                                                              gameCategoryCard(
-                                                                  data[index]
-                                                                      .category),
-                                                        )
-                                                      ],
-                                                    )
-                                                  ],
-                                                ),
-                                              ),
-                                              const Divider()
-                                            ],
+                                                      // ignore: prefer_typing_uninitialized_variables
+                                                      var imageId;
+                                                      if (pageData[innerIndex]
+                                                              .image_id ==
+                                                          "0") {
+                                                        imageId = "null";
+                                                      } else {
+                                                        imageId =
+                                                            pageData[innerIndex]
+                                                                .image_id;
+                                                      }
+                                                      // ignore: prefer_typing_uninitialized_variables
+                                                      var dateTime;
+                                                      if (pageData[innerIndex]
+                                                              .first_release_date ==
+                                                          0) {
+                                                        dateTime = "Bilinmiyor";
+                                                      } else {
+                                                        dateTime = DateTime
+                                                            .fromMillisecondsSinceEpoch(
+                                                                pageData[innerIndex]
+                                                                        .first_release_date! *
+                                                                    1000);
+                                                        dateTime = DateFormat(
+                                                                'dd.MM.yyyy')
+                                                            .format(dateTime);
+                                                      }
+                                                      var gameID = 0;
+                                                      if (pageData[innerIndex]
+                                                              .id !=
+                                                          null) {
+                                                        gameID =
+                                                            pageData[innerIndex]
+                                                                .id!;
+                                                      }
+                                                      return MouseRegion(
+                                                        onHover: (event) =>
+                                                            isHovering.value =
+                                                                true,
+                                                        onExit: (event) =>
+                                                            isHovering.value =
+                                                                false,
+                                                        cursor:
+                                                            SystemMouseCursors
+                                                                .click,
+                                                        child: GestureDetector(
+                                                          onTap: () {
+                                                            Navigator.push(
+                                                              context,
+                                                              MaterialPageRoute(
+                                                                builder: (context) =>
+                                                                    GameDetailPage(
+                                                                        gameID:
+                                                                            gameID),
+                                                              ),
+                                                            );
+                                                          },
+                                                          child: Padding(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .all(8.0),
+                                                            child: Column(
+                                                              children: [
+                                                                Expanded(
+                                                                  child:
+                                                                      SizedBox(
+                                                                    height: double
+                                                                        .infinity,
+                                                                    width: 180,
+                                                                    child:
+                                                                        GridTile(
+                                                                      child:
+                                                                          Stack(
+                                                                        children: [
+                                                                          Card(
+                                                                            elevation:
+                                                                                0,
+                                                                            shape:
+                                                                                const RoundedRectangleBorder(
+                                                                              side: BorderSide(
+                                                                                color: Colors.transparent,
+                                                                              ),
+                                                                              borderRadius: BorderRadius.all(
+                                                                                Radius.circular(12),
+                                                                              ),
+                                                                            ),
+                                                                            child:
+                                                                                Column(
+                                                                              children: [
+                                                                                Expanded(
+                                                                                  child: SizedBox(
+                                                                                    height: 240,
+                                                                                    width: 180,
+                                                                                    child: ClipRRect(
+                                                                                      borderRadius: const BorderRadius.only(
+                                                                                        topLeft: Radius.circular(12),
+                                                                                        topRight: Radius.circular(12),
+                                                                                      ),
+                                                                                      child: Image(
+                                                                                        fit: BoxFit.fill,
+                                                                                        image: CachedNetworkImageProvider(
+                                                                                          """https://${pageData[innerIndex].url}""",
+                                                                                        ),
+                                                                                      ),
+                                                                                    ),
+                                                                                  ),
+                                                                                ),
+                                                                                Tooltip(
+                                                                                  message: pageData[innerIndex].name,
+                                                                                  child: SizedBox(
+                                                                                    width: 180,
+                                                                                    child: Column(
+                                                                                      children: [
+                                                                                        Padding(
+                                                                                          padding: const EdgeInsets.all(4.0),
+                                                                                          child: Text(
+                                                                                            pageData[innerIndex].name.toString(),
+                                                                                            softWrap: true,
+                                                                                            overflow: TextOverflow.ellipsis,
+                                                                                            textAlign: TextAlign.center,
+                                                                                          ),
+                                                                                        ),
+                                                                                        Padding(
+                                                                                          padding: const EdgeInsets.only(bottom: 4.0),
+                                                                                          child: Row(
+                                                                                            mainAxisAlignment: MainAxisAlignment.center,
+                                                                                            children: [
+                                                                                              Padding(
+                                                                                                padding: const EdgeInsets.all(4.0),
+                                                                                                child: Text(
+                                                                                                  dateTime.toString(),
+                                                                                                  softWrap: true,
+                                                                                                  overflow: TextOverflow.ellipsis,
+                                                                                                  textAlign: TextAlign.center,
+                                                                                                  style: const TextStyle(fontSize: 12),
+                                                                                                ),
+                                                                                              ),
+                                                                                              Padding(
+                                                                                                padding: const EdgeInsets.all(4.0),
+                                                                                                child: gameCategoryCard(pageData[innerIndex].category),
+                                                                                              ),
+                                                                                            ],
+                                                                                          ),
+                                                                                        ),
+                                                                                      ],
+                                                                                    ),
+                                                                                  ),
+                                                                                ),
+                                                                              ],
+                                                                            ),
+                                                                          ),
+                                                                          ValueListenableBuilder(
+                                                                            valueListenable:
+                                                                                isHovering,
+                                                                            builder: (context,
+                                                                                value,
+                                                                                child) {
+                                                                              return isHovering.value
+                                                                                  ? Positioned(
+                                                                                      top: 5,
+                                                                                      right: 5,
+                                                                                      child: Card(
+                                                                                        elevation: 0,
+                                                                                        color: const Color.fromARGB(125, 0, 0, 0),
+                                                                                        child: ValueListenableBuilder(
+                                                                                            valueListenable: isFavorite,
+                                                                                            builder: (context, value, child) {
+                                                                                              Map<String, dynamic> gameMap = {
+                                                                                                "gameID": pageData[innerIndex].id,
+                                                                                                "imageURL": "https://images.igdb.com/igdb/image/upload/t_original/$imageId.png",
+                                                                                                "gameName": pageData[innerIndex].name,
+                                                                                              };
+                                                                                              for (var x in gamesList) {
+                                                                                                if (x['gameID'] == pageData[innerIndex].id) {
+                                                                                                  isFavorite.value = true;
+                                                                                                }
+                                                                                              }
+                                                                                              return isFavorite.value
+                                                                                                  ? IconButton(
+                                                                                                      highlightColor: Color(themeColor),
+                                                                                                      hoverColor: Colors.transparent,
+                                                                                                      onPressed: () {
+                                                                                                        gamesList.removeWhere((element) => element['gameID'] == pageData[innerIndex].id);
+                                                                                                        updateData(gamesList, moviesList, seriesList, booksList, actorsList);
+                                                                                                        isFavorite.value = !isFavorite.value;
+                                                                                                      },
+                                                                                                      icon: Icon(
+                                                                                                        Icons.favorite,
+                                                                                                        color: Color(themeColor),
+                                                                                                      ),
+                                                                                                    )
+                                                                                                  : IconButton(
+                                                                                                      highlightColor: Color(themeColor),
+                                                                                                      hoverColor: Colors.transparent,
+                                                                                                      onPressed: () {
+                                                                                                        gamesList.add(gameMap);
+                                                                                                        updateData(gamesList, moviesList, seriesList, booksList, actorsList);
+                                                                                                        isFavorite.value = !isFavorite.value;
+                                                                                                      },
+                                                                                                      icon: const Icon(
+                                                                                                        Icons.favorite_outline,
+                                                                                                        color: Colors.white,
+                                                                                                        // color: Color(themeColor),
+                                                                                                      ),
+                                                                                                    );
+                                                                                            }),
+                                                                                      ),
+                                                                                    )
+                                                                                  : const SizedBox();
+                                                                            },
+                                                                          ),
+                                                                        ],
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                )
+                                                              ],
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      );
+                                                    },
+                                                  );
+                                                }),
                                           ),
-                                        );
-                                      },
+                                        ),
+                                        ValueListenableBuilder(
+                                            valueListenable: pageIndex,
+                                            builder: (context, value, child) {
+                                              return Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            8.0),
+                                                    child: IconButton(
+                                                      icon: const Icon(
+                                                        Icons
+                                                            .arrow_circle_left_outlined,
+                                                        color: Colors.white,
+                                                      ),
+                                                      onPressed: () {
+                                                        if (pageIndex.value >
+                                                            1) {
+                                                          searchGamesController
+                                                              .jumpToPage(1);
+                                                          pageIndex.value = 1;
+                                                          // setState(() =>
+                                                          //     pageIndex.value =
+                                                          //         1);
+                                                        }
+                                                      },
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            8.0),
+                                                    child: IconButton(
+                                                      icon: const Icon(
+                                                        Icons.arrow_left,
+                                                        color: Colors.white,
+                                                      ),
+                                                      onPressed: () {
+                                                        if (pageIndex.value >
+                                                            1) {
+                                                          searchGamesController
+                                                              .previousPage(
+                                                            duration:
+                                                                const Duration(
+                                                                    milliseconds:
+                                                                        500),
+                                                            curve: Curves.ease,
+                                                          );
+                                                          pageIndex.value -= 1;
+                                                        }
+                                                      },
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            8.0),
+                                                    child: Text(
+                                                        "${pageIndex.value}/$totalPages"),
+                                                  ),
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            8.0),
+                                                    child: IconButton(
+                                                      icon: const Icon(
+                                                        Icons.arrow_right,
+                                                        color: Colors.white,
+                                                      ),
+                                                      onPressed: () {
+                                                        if (pageIndex.value <
+                                                            totalPages) {
+                                                          searchGamesController
+                                                              .nextPage(
+                                                            duration:
+                                                                const Duration(
+                                                                    milliseconds:
+                                                                        500),
+                                                            curve: Curves.ease,
+                                                          );
+                                                          pageIndex.value += 1;
+                                                        }
+                                                      },
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            8.0),
+                                                    child: IconButton(
+                                                      icon: const Icon(
+                                                        Icons
+                                                            .arrow_circle_right_outlined,
+                                                        color: Colors.white,
+                                                      ),
+                                                      onPressed: () {
+                                                        if (pageIndex.value <
+                                                            totalPages) {
+                                                          searchGamesController
+                                                              .jumpToPage(
+                                                                  totalPages);
+                                                          pageIndex.value =
+                                                              totalPages;
+                                                          // setState(() {
+                                                          //   searchGamesController
+                                                          //       .jumpToPage(
+                                                          //           totalPages -
+                                                          //               1);
+                                                          //   pageIndexNewlyReleased =
+                                                          //       totalPages;
+                                                          // });
+                                                        }
+                                                      },
+                                                    ),
+                                                  ),
+                                                ],
+                                              );
+                                            }),
+                                      ],
                                     );
                                   } else if (!snapshot.hasData &&
                                       snapshot.connectionState ==
@@ -1344,8 +1634,6 @@ class _SearchPageState extends State<SearchPage> {
                                             .id
                                             .toString()
                                             .substring(7);
-                                        print(bookID);
-                                        print(data[index].title);
 
                                         return MouseRegion(
                                           onEnter: (event) =>
