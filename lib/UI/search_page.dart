@@ -473,7 +473,7 @@ class _SearchPageState extends State<SearchPage> {
                                                         if (pageIndex.value >
                                                             1) {
                                                           searchGamesController
-                                                              .jumpToPage(1);
+                                                              .jumpToPage(0);
                                                           pageIndex.value = 1;
                                                           // setState(() =>
                                                           //     pageIndex.value =
@@ -554,17 +554,10 @@ class _SearchPageState extends State<SearchPage> {
                                                             totalPages) {
                                                           searchGamesController
                                                               .jumpToPage(
-                                                                  totalPages);
+                                                                  totalPages -
+                                                                      1);
                                                           pageIndex.value =
                                                               totalPages;
-                                                          // setState(() {
-                                                          //   searchGamesController
-                                                          //       .jumpToPage(
-                                                          //           totalPages -
-                                                          //               1);
-                                                          //   pageIndexNewlyReleased =
-                                                          //       totalPages;
-                                                          // });
                                                         }
                                                       },
                                                     ),
