@@ -2,25 +2,26 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gnml/Helper/theme_helper.dart';
-import 'package:gnml/UI/series_page/ui/airing_today/airing_today.dart';
-import 'package:gnml/UI/series_page/ui/on_air/on_air.dart';
-import 'package:gnml/UI/series_page/ui/popular_series/popular_series.dart';
-import 'package:gnml/UI/series_page/ui/top_rated/top_rated.dart';
+import 'package:gnml/UI/movies_page/ui/now_playing/now_playing.dart';
+import 'package:gnml/UI/movies_page/ui/popular_movies/popular_movies.dart';
+import 'package:gnml/UI/movies_page/ui/top_rated/top_rated.dart';
+import 'package:gnml/UI/movies_page/ui/upcoming/upcoming.dart';
 import 'package:gnml/Widgets/circularprogressindicator.dart';
 import 'package:provider/provider.dart';
 
-class SeriesPage extends StatefulWidget {
-  const SeriesPage({Key? key}) : super(key: key);
+class MoviesPage extends StatefulWidget {
+  const MoviesPage({Key? key}) : super(key: key);
 
   @override
-  State<SeriesPage> createState() => _SeriesPageState();
+  State<MoviesPage> createState() => _MoviesPageState();
 }
 
-class _SeriesPageState extends State<SeriesPage> {
+class _MoviesPageState extends State<MoviesPage> {
   User? user = FirebaseAuth.instance.currentUser;
+
   bool boolean = false;
   late PageController _pageController;
-  int pageIndexOnTheAir = 1;
+  int pageIndexNowPlaying = 1;
   int pageIndexTopRated = 1;
   int pageIndexUpcoming = 1;
 
@@ -68,46 +69,46 @@ class _SeriesPageState extends State<SeriesPage> {
     int themeColor = Provider.of<ThemeProvider>(context).color;
     return Scaffold(
       body: FutureBuilder(
-        future: getData(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            Map<String, dynamic> list =
-                snapshot.data!.data() as Map<String, dynamic>;
-            List gamesList = list['library']['games'];
-            List moviesList = list['library']['movies'];
-            List seriesList = list['library']['series'];
-            List booksList = list['library']['books'];
-            List actorsList = list['library']['actors'];
-            return SingleChildScrollView(
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      IconButton(
-                        onPressed: () {
-                          setState(() {});
-                        },
-                        icon: const Icon(Icons.refresh),
-                      ),
-                    ],
-                  ),
-                  popularSeries(user, seriesList, themeColor, gamesList,
-                      moviesList, booksList, actorsList, _pageController),
-                  onAirSeries(user, seriesList, themeColor, gamesList,
-                      moviesList, booksList, actorsList, pageIndexOnTheAir),
-                  topRatedSeries(user, seriesList, themeColor, gamesList,
-                      moviesList, booksList, actorsList, pageIndexTopRated),
-                  airingTodaySeries(user, seriesList, themeColor, gamesList,
-                      moviesList, booksList, actorsList, pageIndexOnTheAir),
-                ],
-              ),
-            );
-          } else {
-            return const CustomCPI();
-          }
-        },
-      ),
+          future: getData(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              Map<String, dynamic> list =
+                  snapshot.data!.data() as Map<String, dynamic>;
+              List gamesList = list['library']['games'];
+              List moviesList = list['library']['movies'];
+              List seriesList = list['library']['series'];
+              List booksList = list['library']['books'];
+              List actorsList = list['library']['actors'];
+
+              return SingleChildScrollView(
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        IconButton(
+                          onPressed: () {
+                            setState(() {});
+                          },
+                          icon: const Icon(Icons.refresh),
+                        ),
+                      ],
+                    ),
+                    popularMovies(user, moviesList, themeColor, gamesList,
+                        seriesList, booksList, actorsList, _pageController),
+                    nowPlayingMovies(user, moviesList, themeColor, gamesList,
+                        seriesList, booksList, actorsList, pageIndexNowPlaying),
+                    topRatedMovies(user, moviesList, themeColor, gamesList,
+                        seriesList, booksList, actorsList, pageIndexTopRated),
+                    upcomingMovies(user, moviesList, themeColor, gamesList,
+                        seriesList, booksList, actorsList, pageIndexUpcoming),
+                  ],
+                ),
+              );
+            } else {
+              return const CustomCPI();
+            }
+          }),
     );
   }
 
@@ -119,7 +120,7 @@ class _SeriesPageState extends State<SeriesPage> {
 }
 
 String getReleaseDate(data) {
-  String date = data.first_air_date;
+  String date = data.release_date;
   String day = date.substring(8);
   date = date.substring(0, 7);
   String month = date.substring(5);

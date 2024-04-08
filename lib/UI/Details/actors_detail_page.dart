@@ -1,10 +1,8 @@
 import 'dart:convert';
-import 'dart:developer';
 import 'dart:ui';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:gnml/Data/Model/actor_model.dart';
 import 'package:gnml/Helper/theme_helper.dart';
