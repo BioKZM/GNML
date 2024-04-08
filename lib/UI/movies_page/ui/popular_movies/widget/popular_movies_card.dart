@@ -114,8 +114,7 @@ ListView popularMoviesCards(
                                             hoverColor: Colors.transparent,
                                             onPressed: () {
                                               MoviesData().removeFromMoviesList(
-                                                  moviesList,
-                                                  data[index]['movieID']);
+                                                  moviesList, data[index].id);
                                               FirebaseUserData(user: user)
                                                   .updateData(
                                                       gamesList,

@@ -174,8 +174,7 @@ PageView upcomingMoviesCards(
                                                                     .removeFromMoviesList(
                                                                   moviesList,
                                                                   data[innerIndex]
-                                                                      [
-                                                                      'movieID'],
+                                                                      .id,
                                                                 );
                                                                 FirebaseUserData(
                                                                         user:

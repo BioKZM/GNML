@@ -174,8 +174,7 @@ PageView topRatedMoviesCards(
                                                                 MoviesData().removeFromMoviesList(
                                                                     moviesList,
                                                                     data[innerIndex]
-                                                                        [
-                                                                        'movieID']);
+                                                                        .id);
                                                                 FirebaseUserData(
                                                                         user:
                                                                             user)

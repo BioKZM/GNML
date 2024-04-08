@@ -3,7 +3,6 @@
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
 ///
@@ -41,45 +40,45 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static FirebaseOptions web = FirebaseOptions(
-    apiKey: DotEnv().env['FIREBASE_WEB_KEY'].toString(),
-    appId: DotEnv().env['FIREBASE_WEB_APPID'].toString(),
-    messagingSenderId: DotEnv().env['FIREBASE_WEB_SENDERID'].toString(),
-    projectId: DotEnv().env['FIREBASE_WEB_PROJECTID'].toString(),
-    authDomain: DotEnv().env['FIREBASE_WEB_AUTHDOMAIN'].toString(),
-    storageBucket: DotEnv().env['FIREBASE_WEB_STORAGEBUCKET'].toString(),
-    measurementId: DotEnv().env['FIREBASE_WEB_MEASUREMENTID'].toString(),
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyAfypd3RphhEGQ98RO6q81sRmPXMXIevg8',
+    appId: '1:684130772443:web:9fa91155f763afb51233fe',
+    messagingSenderId: '684130772443',
+    projectId: 'gnml-416500',
+    authDomain: 'gnml-416500.firebaseapp.com',
+    storageBucket: 'gnml-416500.appspot.com',
+    measurementId: 'G-5K6MF6LN9F',
   );
 
-  static FirebaseOptions android = FirebaseOptions(
-    apiKey: DotEnv().env['FIREBASE_ANDROID_KEY'].toString(),
-    appId: DotEnv().env['FIREBASE_ANDROID_APPID'].toString(),
-    messagingSenderId: DotEnv().env['FIREBASE_ANDROID_SENDERID'].toString(),
-    projectId: DotEnv().env['FIREBASE_ANDROID_PROJECTID'].toString(),
-    storageBucket: DotEnv().env['FIREBASE_ANDROID_STORAGEBUCKET'].toString(),
+  static const FirebaseOptions android = FirebaseOptions(
+    apiKey: 'AIzaSyBgqPmZBGN9LUyUCTuYNeOlpTayC1BUyAU',
+    appId: '1:684130772443:android:1d0109324698466f1233fe',
+    messagingSenderId: '684130772443',
+    projectId: 'gnml-416500',
+    storageBucket: 'gnml-416500.appspot.com',
   );
 
-  static FirebaseOptions ios = FirebaseOptions(
-    apiKey: DotEnv().env['FIREBASE_IOS_KEY'].toString(),
-    appId: DotEnv().env['FIREBASE_IOS_APPID'].toString(),
-    messagingSenderId: DotEnv().env['FIREBASE_IOS_SENDERID'].toString(),
-    projectId: DotEnv().env['FIREBASE_IOS_PROJECTID'].toString(),
-    storageBucket: DotEnv().env['FIREBASE_IOS_STORAGEBUCKET'].toString(),
-    iosBundleId: DotEnv().env['FIREBASE_IOS_BUNDLEID'].toString(),
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyApUvJBF3xmGUEWL_69g_sOZlDFoRA2Bj8',
+    appId: '1:684130772443:ios:32b8eb374e0d71a51233fe',
+    messagingSenderId: '684130772443',
+    projectId: 'gnml-416500',
+    storageBucket: 'gnml-416500.appspot.com',
+    iosBundleId: 'com.example.gnml',
   );
 
-  static FirebaseOptions macos = FirebaseOptions(
-    apiKey: DotEnv().env['FIREBASE_MACOS_KEY'].toString(),
-    appId: DotEnv().env['FIREBASE_MACOS_APPID'].toString(),
-    messagingSenderId: DotEnv().env['FIREBASE_MACOS_SENDERID'].toString(),
-    projectId: DotEnv().env['FIREBASE_MACOS_PROJECTID'].toString(),
-    storageBucket: DotEnv().env['FIREBASE_MACOS_STORAGEBUCKET'].toString(),
-    iosBundleId: DotEnv().env['FIREBASE_MACOS_BUNDLEID'].toString(),
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyApUvJBF3xmGUEWL_69g_sOZlDFoRA2Bj8',
+    appId: '1:684130772443:ios:9337a905197c67b71233fe',
+    messagingSenderId: '684130772443',
+    projectId: 'gnml-416500',
+    storageBucket: 'gnml-416500.appspot.com',
+    iosBundleId: 'com.example.gnml.RunnerTests',
   );
-  static FirebaseOptions windows = FirebaseOptions(
-    apiKey: DotEnv().env['FIREBASE_WINDOWS_KEY'].toString(),
-    appId: DotEnv().env['FIREBASE_WINDOWS_APPID'].toString(),
-    messagingSenderId: DotEnv().env['FIREBASE_WINDOWS_SENDERID'].toString(),
-    projectId: DotEnv().env['FIREBASE_WINDOWS_PROJECTID'].toString(),
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: "AIzaSyBgqPmZBGN9LUyUCTuYNeOlpTayC1BUyAU",
+    appId: "1:684130772443:android:505bb6ee00df62201233fe",
+    messagingSenderId: "684130772443",
+    projectId: "gnml-416500",
   );
 }

@@ -5,17 +5,18 @@ import 'package:gnml/Data/series_data.dart';
 import 'package:gnml/UI/Details/serie_detail_page.dart';
 
 PageView onAirSeriesCards(
-    User? user,
-    List<dynamic>? data,
-    List<dynamic> seriesList,
-    int themeColor,
-    List<dynamic> gamesList,
-    List<dynamic> moviesList,
-    List<dynamic> booksList,
-    List<dynamic> actorsList,
-    int pageIndexOnTheAir,
-    StateSetter setState,
-    int? totalPages) {
+  User? user,
+  List<dynamic>? data,
+  List<dynamic> seriesList,
+  int themeColor,
+  List<dynamic> gamesList,
+  List<dynamic> moviesList,
+  List<dynamic> booksList,
+  List<dynamic> actorsList,
+  int pageIndexOnTheAir,
+  StateSetter setState,
+  int? totalPages,
+) {
   return PageView.builder(
     itemBuilder: (context, index) {
       return Column(
