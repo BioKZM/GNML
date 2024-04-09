@@ -11,7 +11,6 @@ import 'package:gnml/Logic/moviepage_logic.dart';
 import 'package:gnml/UI/Details/actors_detail_page.dart';
 import 'package:gnml/Widgets/circularprogressindicator.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class MovieDetailPage extends StatefulWidget {
   final int movieID;

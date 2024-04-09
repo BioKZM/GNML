@@ -1,3 +1,4 @@
+import 'package:screen_retriever/screen_retriever.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class WindowProvider {
@@ -27,10 +28,11 @@ class WindowProvider {
 
   Future<void> getSize() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
+    Display primaryDisplay = await screenRetriever.getPrimaryDisplay();
     var width = prefs.getDouble("width");
     var height = prefs.getDouble("height");
-    width ??= 800;
-    height ??= 600;
+    width ??= primaryDisplay.size.width;
+    height ??= primaryDisplay.size.height;
     // return [prefs.getDouble("width"), prefs.getDouble("heigth")];
     setSize(width, height);
   }

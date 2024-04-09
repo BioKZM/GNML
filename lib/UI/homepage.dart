@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -9,14 +8,13 @@ import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:gnml/Helper/theme_helper.dart';
 import 'package:gnml/UI/User/profile_page.dart';
-import 'package:gnml/UI/games_page.dart';
-import 'package:gnml/UI/library_page.dart';
-import 'package:gnml/UI/movies_page.dart';
-import 'package:gnml/UI/search_page.dart';
+import 'package:gnml/UI/games_page/games_page.dart';
+import 'package:gnml/UI/library_page/library_page.dart';
+import 'package:gnml/UI/movies_page/movies_page.dart';
+import 'package:gnml/UI/search_page/search_page.dart';
 import 'package:gnml/UI/series_page.dart';
 import 'package:gnml/UI/User/settings_page.dart';
 import 'package:gnml/Widgets/circularprogressindicator.dart';
-import 'package:mobx/mobx.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:updat/updat.dart';
