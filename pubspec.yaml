@@ -133,7 +133,6 @@ flutter:
       fonts:
         - asset: assets/fonts/RobotoBold.ttf
   assets:
-    - .env
     - assets/images/
 
   # For details regarding fonts from package dependencies,
