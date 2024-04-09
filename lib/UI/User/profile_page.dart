@@ -8,6 +8,7 @@ import 'package:gnml/Helper/auth.dart';
 import 'package:gnml/Helper/theme_helper.dart';
 import 'package:gnml/UI/Authentication/login_page.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
 
 class ProfilePage extends StatefulWidget {
@@ -210,8 +211,12 @@ class _ProfilePageState extends State<ProfilePage> {
                           style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.black87,
                               foregroundColor: Colors.red),
-                          onPressed: () {
+                          onPressed: () async {
+                            SharedPreferences prefs =
+                                await SharedPreferences.getInstance();
+                            prefs.remove('userEmail');
                             _auth.signOut();
+                            // ignore: use_build_context_synchronously
                             Navigator.push(
                               context,
                               MaterialPageRoute(
