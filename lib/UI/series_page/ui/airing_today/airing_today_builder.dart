@@ -28,18 +28,95 @@ Expanded airingTodaySeriesBuilder(
 
                   if (snapshot.hasData &&
                       snapshot.connectionState == ConnectionState.done) {
-                    return airingTodaySeriesCards(
-                      user,
-                      data,
-                      seriesList,
-                      themeColor,
-                      gamesList,
-                      moviesList,
-                      booksList,
-                      actorsList,
-                      setState,
-                      totalPages,
-                      pageIndexAiringToday,
+                    return Column(
+                      children: [
+                        SizedBox(
+                          height: 1200,
+                          child: airingTodaySeriesCards(
+                            user,
+                            data,
+                            seriesList,
+                            themeColor,
+                            gamesList,
+                            moviesList,
+                            booksList,
+                            actorsList,
+                            setState,
+                            totalPages,
+                            pageIndexAiringToday,
+                          ),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.arrow_circle_left_outlined,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () {
+                                  if (pageIndexAiringToday > 1) {
+                                    setState(() => pageIndexAiringToday = 1);
+                                  }
+                                },
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.arrow_left,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () {
+                                  if (pageIndexAiringToday > 1) {
+                                    setState(() => pageIndexAiringToday -= 1);
+                                  }
+                                },
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                  "${pageIndexAiringToday.toString()}/$totalPages"),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.arrow_right,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () {
+                                  if (pageIndexAiringToday < totalPages!) {
+                                    setState(() {
+                                      pageIndexAiringToday += 1;
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.arrow_circle_right_outlined,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () {
+                                  if (pageIndexAiringToday < totalPages!) {
+                                    setState(() {
+                                      pageIndexAiringToday = totalPages;
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     );
                   } else {
                     bool connectionBool = true;
@@ -56,7 +133,7 @@ Expanded airingTodaySeriesBuilder(
                                   const Padding(
                                     padding: EdgeInsets.all(8.0),
                                     child: Text(
-                                        'Veriler yüklenirken bir hata oluştu. Yeniden denemek için tıkla'),
+                                        'An error occurred while loading data. Click to try again'),
                                   ),
                                   Padding(
                                     padding: const EdgeInsets.all(8.0),

@@ -44,7 +44,7 @@ FutureBuilder<List<GameModel>> searchGamesBuilder(
       } else if (!snapshot.hasData &&
           snapshot.connectionState == ConnectionState.done) {
         return const Center(
-          child: Text("No Result"),
+          child: Text("No result"),
         );
       } else {
         return const CustomCPI();

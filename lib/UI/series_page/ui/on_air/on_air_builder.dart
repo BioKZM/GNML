@@ -27,18 +27,95 @@ Expanded onAirSeriesBuilder(
                   var data = snapshot.data;
                   if (snapshot.hasData &&
                       snapshot.connectionState == ConnectionState.done) {
-                    return onAirSeriesCards(
-                      user,
-                      data,
-                      seriesList,
-                      themeColor,
-                      gamesList,
-                      moviesList,
-                      booksList,
-                      actorsList,
-                      pageIndexOnTheAir,
-                      setState,
-                      totalPages,
+                    return Column(
+                      children: [
+                        SizedBox(
+                          height: 1200,
+                          child: onAirSeriesCards(
+                            user,
+                            data,
+                            seriesList,
+                            themeColor,
+                            gamesList,
+                            moviesList,
+                            booksList,
+                            actorsList,
+                            pageIndexOnTheAir,
+                            setState,
+                            totalPages,
+                          ),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.arrow_circle_left_outlined,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () {
+                                  if (pageIndexOnTheAir > 1) {
+                                    setState(() => pageIndexOnTheAir = 1);
+                                  }
+                                },
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.arrow_left,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () {
+                                  if (pageIndexOnTheAir > 1) {
+                                    setState(() => pageIndexOnTheAir -= 1);
+                                  }
+                                },
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                  "${pageIndexOnTheAir.toString()}/$totalPages"),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.arrow_right,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () {
+                                  if (pageIndexOnTheAir < totalPages!) {
+                                    setState(() {
+                                      pageIndexOnTheAir += 1;
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.arrow_circle_right_outlined,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () {
+                                  if (pageIndexOnTheAir < totalPages!) {
+                                    setState(() {
+                                      pageIndexOnTheAir = totalPages;
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     );
                   } else {
                     bool connectionBool = true;
@@ -55,7 +132,7 @@ Expanded onAirSeriesBuilder(
                                   const Padding(
                                     padding: EdgeInsets.all(8.0),
                                     child: Text(
-                                        'Veriler yüklenirken bir hata oluştu. Yeniden denemek için tıkla'),
+                                        'An error occurred while loading data. Click to try again'),
                                   ),
                                   Padding(
                                     padding: const EdgeInsets.all(8.0),

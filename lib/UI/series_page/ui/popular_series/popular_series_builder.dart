@@ -51,7 +51,7 @@ StatefulBuilder popularSeriesBuilder(
                               const Padding(
                                 padding: EdgeInsets.all(8.0),
                                 child: Text(
-                                    'Veriler yüklenirken bir hata oluştu. Yeniden denemek için tıkla'),
+                                    'An error occurred while loading data. Click to try again'),
                               ),
                               Padding(
                                 padding: const EdgeInsets.all(8.0),

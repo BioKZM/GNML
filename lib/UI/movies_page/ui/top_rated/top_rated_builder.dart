@@ -28,18 +28,95 @@ Expanded topRatedMoviesBuilder(
 
                   if (snapshot.hasData &&
                       snapshot.connectionState == ConnectionState.done) {
-                    return topRatedMoviesCards(
-                      user,
-                      data,
-                      moviesList,
-                      themeColor,
-                      gamesList,
-                      seriesList,
-                      booksList,
-                      actorsList,
-                      setState,
-                      totalPages,
-                      pageIndexTopRated,
+                    return Column(
+                      children: [
+                        SizedBox(
+                          height: 1200,
+                          child: topRatedMoviesCards(
+                            user,
+                            data,
+                            moviesList,
+                            themeColor,
+                            gamesList,
+                            seriesList,
+                            booksList,
+                            actorsList,
+                            setState,
+                            totalPages,
+                            pageIndexTopRated,
+                          ),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.arrow_circle_left_outlined,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () {
+                                  if (pageIndexTopRated > 1) {
+                                    setState(() => pageIndexTopRated = 1);
+                                  }
+                                },
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.arrow_left,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () {
+                                  if (pageIndexTopRated > 1) {
+                                    setState(() => pageIndexTopRated -= 1);
+                                  }
+                                },
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                  "${pageIndexTopRated.toString()}/$totalPages"),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.arrow_right,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () {
+                                  if (pageIndexTopRated < totalPages!) {
+                                    setState(() {
+                                      pageIndexTopRated += 1;
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.arrow_circle_right_outlined,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () {
+                                  if (pageIndexTopRated < totalPages!) {
+                                    setState(() {
+                                      pageIndexTopRated = totalPages;
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     );
                   } else {
                     bool connectionBool = true;
@@ -56,7 +133,7 @@ Expanded topRatedMoviesBuilder(
                                   const Padding(
                                     padding: EdgeInsets.all(8.0),
                                     child: Text(
-                                        'Veriler yüklenirken bir hata oluştu. Yeniden denemek için tıkla'),
+                                        'An error occurred while loading data. Click to try again'),
                                   ),
                                   Padding(
                                     padding: const EdgeInsets.all(8.0),

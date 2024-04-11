@@ -29,18 +29,95 @@ Expanded nowPlayingBuilder(
 
                   if (snapshot.hasData &&
                       snapshot.connectionState == ConnectionState.done) {
-                    return nowPlayingCards(
-                        user,
-                        data,
-                        moviesList,
-                        themeColor,
-                        gamesList,
-                        seriesList,
-                        booksList,
-                        actorsList,
-                        setState,
-                        totalPages,
-                        pageIndexNowPlaying);
+                    return Column(
+                      children: [
+                        SizedBox(
+                          height: 1200,
+                          child: nowPlayingCards(
+                              user,
+                              data,
+                              moviesList,
+                              themeColor,
+                              gamesList,
+                              seriesList,
+                              booksList,
+                              actorsList,
+                              setState,
+                              totalPages,
+                              pageIndexNowPlaying),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.arrow_circle_left_outlined,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () {
+                                  if (pageIndexNowPlaying > 1) {
+                                    setState(() => pageIndexNowPlaying = 1);
+                                  }
+                                },
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.arrow_left,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () {
+                                  if (pageIndexNowPlaying > 1) {
+                                    setState(() => pageIndexNowPlaying -= 1);
+                                  }
+                                },
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                  "${pageIndexNowPlaying.toString()}/$totalPages"),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.arrow_right,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () {
+                                  if (pageIndexNowPlaying < totalPages!) {
+                                    setState(() {
+                                      pageIndexNowPlaying += 1;
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.arrow_circle_right_outlined,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () {
+                                  if (pageIndexNowPlaying < totalPages!) {
+                                    setState(() {
+                                      pageIndexNowPlaying = totalPages;
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
                   } else {
                     bool connectionBool = true;
                     if (snapshot.connectionState == ConnectionState.done) {
@@ -56,7 +133,7 @@ Expanded nowPlayingBuilder(
                                   const Padding(
                                     padding: EdgeInsets.all(8.0),
                                     child: Text(
-                                        'Veriler yüklenirken bir hata oluştu. Yeniden denemek için tıkla'),
+                                        'An error occurred while loading data. Click to try again'),
                                   ),
                                   Padding(
                                     padding: const EdgeInsets.all(8.0),

@@ -7,7 +7,7 @@ class ShimmerEffect extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(left: 16.0),
+      padding: const EdgeInsets.all(16.0),
       child: SizedBox(
         width: 200.0,
         height: 100.0,

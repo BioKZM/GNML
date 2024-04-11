@@ -54,7 +54,7 @@ StatefulBuilder newlyReleasedBuilder(
                             const Padding(
                               padding: EdgeInsets.all(8.0),
                               child: Text(
-                                  'Veriler yüklenirken bir hata oluştu. Yeniden denemek için tıkla'),
+                                  'An error occurred while loading data. Click to try again'),
                             ),
                             Padding(
                               padding: const EdgeInsets.all(8.0),
@@ -74,21 +74,3 @@ StatefulBuilder newlyReleasedBuilder(
     );
   });
 }
-
-// int getGameID(List<GameModel> pageData, int innerIndex) {
-//   var gameID = 0;
-//   if (pageData[innerIndex].id != null) {
-//     gameID = pageData[innerIndex].id!;
-//   }
-//   return gameID;
-// }
-
-// getImageID(List<GameModel> pageData, int innerIndex) {
-//   var imageId;
-//   if (pageData[innerIndex].image_id == "0") {
-//     imageId = "null";
-//   } else {
-//     imageId = pageData[innerIndex].image_id;
-//   }
-//   return imageId;
-// }

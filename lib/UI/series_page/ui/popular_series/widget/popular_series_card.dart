@@ -162,38 +162,3 @@ ListView popularSeriesCards(
     },
   );
 }
-
-void addSeriesToList(List<dynamic> seriesList, Map<String, dynamic> serieMap) {
-  seriesList.add(serieMap);
-}
-
-void removeFromSeriesList(
-    List<dynamic> seriesList, List<dynamic> data, int index) {
-  seriesList.removeWhere((element) => element['serieID'] == data[index].id);
-}
-
-void addFavoritesToSeriesList(List<dynamic> seriesList, List<dynamic> data,
-    int index, ValueNotifier<bool> isFavorite) {
-  for (var x in seriesList) {
-    if (x['serieID'] == data[index].id) {
-      isFavorite.value = true;
-    }
-  }
-}
-
-Map<String, dynamic> getSeriesMap(List<dynamic> data, int index) {
-  Map<String, dynamic> serieMap = {
-    "serieID": data[index].id,
-    "imageURL": data[index].imageURL.toString(),
-    "serieName": data[index].name,
-  };
-  return serieMap;
-}
-
-int getSerieID(List<dynamic>? data, int index) {
-  var serieID = 0;
-  if (data?[index].id != null) {
-    serieID = data![index].id!;
-  }
-  return serieID;
-}
