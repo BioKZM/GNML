@@ -65,7 +65,9 @@ FutureBuilder<List<BookModel>> searchBooksBuilder(
       } else if (snapshot.connectionState == ConnectionState.waiting) {
         return const CustomCPI();
       } else {
-        return const Center();
+        return const Center(
+          child: Text("No result"),
+        );
       }
     },
   );

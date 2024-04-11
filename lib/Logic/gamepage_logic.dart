@@ -20,13 +20,13 @@ class GamePageLogic {
     pastUnixTime = currentUnixTime - const Duration(days: 120).inSeconds;
     bodies = {
       "newlyReleased":
-          """fields cover.*,genres,name,platforms,rating,first_release_date,hypes;sort first_release_date desc;where first_release_date < $currentUnixTime ;limit 50;""",
+          """fields cover.*,genres,name,platforms,rating,first_release_date,hypes;sort first_release_date desc;where first_release_date < $currentUnixTime ;limit 500;""",
       "comingSoon":
-          """fields cover.*,genres,name,platforms,rating,first_release_date,hypes;sort first_release_date desc;where first_release_date < $newUnixTime & first_release_date > $currentUnixTime  ;limit 50;""",
+          """fields cover.*,genres,name,platforms,rating,first_release_date,hypes;sort first_release_date desc;where first_release_date < $newUnixTime & first_release_date > $currentUnixTime  ;limit 500;""",
       "mostlyAnticipated":
-          """fields cover.*,genres,name,platforms,rating,first_release_date,hypes;sort hypes desc;where first_release_date > $currentUnixTime;limit 50;""",
+          """fields cover.*,genres,name,platforms,rating,first_release_date,hypes;sort hypes desc;where first_release_date > $currentUnixTime;limit 500;""",
       "popularRightNow":
-          """fields cover.*, genres,name,platforms,rating,first_release_date,hypes;sort hypes desc; where first_release_date > $pastUnixTime & first_release_date < $currentUnixTime & hypes > 10; limit 50;""",
+          """fields cover.*, genres,name,platforms,rating,first_release_date,hypes;sort hypes desc;where first_release_date < $currentUnixTime & hypes > 10; limit 500;""",
     };
   }
 

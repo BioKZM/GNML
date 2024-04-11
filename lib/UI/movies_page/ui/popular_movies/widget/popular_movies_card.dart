@@ -167,30 +167,3 @@ ListView popularMoviesCards(
     },
   );
 }
-
-void addToMoviesList(List<dynamic> moviesList, Map<String, dynamic> movieMap) {
-  moviesList.add(movieMap);
-}
-
-void addFavoritesToMoviesList(List<dynamic> moviesList, List<dynamic> data,
-    int index, ValueNotifier<bool> isFavorite) {
-  for (var x in moviesList) {
-    if (x['movieID'] == data[index].id) {
-      isFavorite.value = true;
-    }
-  }
-}
-
-Map<String, dynamic> getMovieMap(List<dynamic> data, int index) {
-  Map<String, dynamic> movieMap = {
-    "movieID": data[index].id,
-    "imageURL": data[index].imageURL.toString(),
-    "movieName": data[index].title,
-  };
-  return movieMap;
-}
-
-void removeFromMoviesList(
-    List<dynamic> moviesList, List<dynamic> data, int index) {
-  moviesList.removeWhere((element) => element['movieID'] == data[index].id);
-}

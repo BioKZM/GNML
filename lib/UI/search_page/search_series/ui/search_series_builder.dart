@@ -41,8 +41,13 @@ StatefulBuilder searchSeriesBuilder(
                       );
                     },
                   );
-                } else {
+                } else if (snapshot.connectionState ==
+                    ConnectionState.waiting) {
                   return const CustomCPI();
+                } else {
+                  return const Center(
+                    child: Text("No result"),
+                  );
                 }
               },
             );

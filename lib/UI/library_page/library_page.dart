@@ -8,6 +8,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:gnml/Helper/theme_helper.dart';
 import 'package:gnml/UI/library_page/ui/card_view/actor_cards.dart';
 import 'package:gnml/UI/library_page/ui/card_view/book_cards.dart';
+import 'package:gnml/UI/library_page/ui/card_view/favorite_cards.dart';
 import 'package:gnml/UI/library_page/ui/card_view/game_cards.dart';
 import 'package:gnml/UI/library_page/ui/card_view/movie_cards.dart';
 import 'package:gnml/UI/library_page/ui/card_view/serie_cards.dart';
@@ -30,7 +31,13 @@ class LibraryPage extends StatefulWidget {
   State<LibraryPage> createState() => _LibraryPageState();
 }
 
-class _LibraryPageState extends State<LibraryPage> {
+class _LibraryPageState extends State<LibraryPage>
+    with SingleTickerProviderStateMixin {
+  @override
+  void initState() {
+    super.initState();
+  }
+
   User? user = FirebaseAuth.instance.currentUser;
   Views buttonView = Views.cardview;
   Sort buttonSort = Sort.atoz;
@@ -88,6 +95,7 @@ class _LibraryPageState extends State<LibraryPage> {
               List seriesList = list['library']['series'];
               List booksList = list['library']['books'];
               List actorsList = list['library']['actors'];
+              List? favoritesList = list['library']['favorites'];
 
               return SingleChildScrollView(
                 child: Padding(
@@ -126,6 +134,8 @@ class _LibraryPageState extends State<LibraryPage> {
                         builder: (context) {
                           if (buttonView == Views.cardview) {
                             if (buttonSort == Sort.atoz) {
+                              favoritesList?.sort((a, b) =>
+                                  a['gameName'].compareTo(b['gameName']));
                               gamesList.sort((a, b) =>
                                   a['gameName'].compareTo(b['gameName']));
                               moviesList.sort((a, b) =>
@@ -163,14 +173,16 @@ class _LibraryPageState extends State<LibraryPage> {
                             }
 
                             return cardView(
-                                gamesList,
-                                supportedLength,
-                                context,
-                                themeColor,
-                                moviesList,
-                                seriesList,
-                                booksList,
-                                actorsList);
+                              gamesList,
+                              supportedLength,
+                              context,
+                              themeColor,
+                              moviesList,
+                              seriesList,
+                              booksList,
+                              actorsList,
+                              favoritesList,
+                            );
                           } else {
                             if (buttonSort == Sort.atoz) {
                               gamesList.sort((a, b) =>
@@ -252,19 +264,79 @@ class _LibraryPageState extends State<LibraryPage> {
       List<dynamic> moviesList,
       List<dynamic> seriesList,
       List<dynamic> booksList,
-      List<dynamic> actorsList) {
+      List<dynamic> actorsList,
+      List<dynamic>? favoritesList) {
     return Column(
       children: [
-        gameCardsTile(user, gamesList, supportedLength, context, themeColor,
-            moviesList, seriesList, booksList, actorsList),
-        movieCardsTile(user, moviesList, supportedLength, context, themeColor,
-            gamesList, seriesList, booksList, actorsList),
-        serieCardsTile(user, seriesList, supportedLength, context, themeColor,
-            gamesList, moviesList, booksList, actorsList),
-        bookCardsTile(user, booksList, supportedLength, context, themeColor,
-            gamesList, moviesList, seriesList, actorsList),
-        actorCardsTile(user, actorsList, supportedLength, context, themeColor,
-            gamesList, moviesList, seriesList, booksList),
+        // favoriteCardsTile(
+        //   user,
+        //   gamesList,
+        //   supportedLength,
+        //   context,
+        //   themeColor,
+        //   moviesList,
+        //   seriesList,
+        //   booksList,
+        //   actorsList,
+        //   favoritesList,
+        // ),
+        gameCardsTile(
+          user,
+          gamesList,
+          supportedLength,
+          context,
+          themeColor,
+          moviesList,
+          seriesList,
+          booksList,
+          actorsList,
+
+          // animation,
+        ),
+        movieCardsTile(
+          user,
+          moviesList,
+          supportedLength,
+          context,
+          themeColor,
+          gamesList,
+          seriesList,
+          booksList,
+          actorsList,
+        ),
+        serieCardsTile(
+          user,
+          seriesList,
+          supportedLength,
+          context,
+          themeColor,
+          gamesList,
+          moviesList,
+          booksList,
+          actorsList,
+        ),
+        bookCardsTile(
+          user,
+          booksList,
+          supportedLength,
+          context,
+          themeColor,
+          gamesList,
+          moviesList,
+          seriesList,
+          actorsList,
+        ),
+        actorCardsTile(
+          user,
+          actorsList,
+          supportedLength,
+          context,
+          themeColor,
+          gamesList,
+          moviesList,
+          seriesList,
+          booksList,
+        ),
       ],
     );
   }

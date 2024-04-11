@@ -27,7 +27,7 @@ Card popularGames(
               child: Padding(
                 padding:
                     EdgeInsets.only(left: 16, top: 4, right: 16, bottom: 4),
-                child: Text("Popular Games",
+                child: Text("All Time Popular Games",
                     style:
                         TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               ),

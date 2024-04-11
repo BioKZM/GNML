@@ -12,7 +12,7 @@ import 'package:gnml/UI/games_page/games_page.dart';
 import 'package:gnml/UI/library_page/library_page.dart';
 import 'package:gnml/UI/movies_page/movies_page.dart';
 import 'package:gnml/UI/search_page/search_page.dart';
-import 'package:gnml/UI/series_page.dart';
+import 'package:gnml/UI/series_page/series_page.dart';
 import 'package:gnml/UI/User/settings_page.dart';
 import 'package:gnml/Widgets/circularprogressindicator.dart';
 import 'package:package_info_plus/package_info_plus.dart';
