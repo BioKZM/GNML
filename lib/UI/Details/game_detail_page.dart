@@ -28,7 +28,8 @@ class GameDetailPage extends StatefulWidget {
 
 class _GameDetailPageState extends State<GameDetailPage> {
   User? user = FirebaseAuth.instance.currentUser;
-  bool boolean = false;
+  bool isLiked = false;
+  bool isFavorited = false;
   String? connectionText;
   @override
   void initState() {
@@ -110,6 +111,7 @@ class _GameDetailPageState extends State<GameDetailPage> {
                     List seriesList = list['library']['series'];
                     List booksList = list['library']['books'];
                     List actorsList = list['library']['actors'];
+                    Map<String, dynamic> favoritesList = list['favorites'];
                     Map<String, dynamic> gameMap = {
                       "gameID": widget.gameID,
                       "imageURL":
@@ -118,7 +120,7 @@ class _GameDetailPageState extends State<GameDetailPage> {
                     };
                     for (var x in gamesList) {
                       if (x['gameID'] == widget.gameID) {
-                        boolean = true;
+                        isLiked = true;
                       }
                     }
 
@@ -224,7 +226,7 @@ class _GameDetailPageState extends State<GameDetailPage> {
                                                                       themeColor),
                                                               hoverColor: Colors
                                                                   .transparent,
-                                                              icon: boolean
+                                                              icon: isLiked
                                                                   ? Tooltip(
                                                                       message:
                                                                           "Remove from Library",
@@ -242,7 +244,7 @@ class _GameDetailPageState extends State<GameDetailPage> {
                                                                               .favorite_outline),
                                                                     ),
                                                               onPressed: () {
-                                                                if (boolean) {
+                                                                if (isLiked) {
                                                                   gamesList.removeWhere((element) =>
                                                                       element[
                                                                           'gameID'] ==
@@ -265,8 +267,8 @@ class _GameDetailPageState extends State<GameDetailPage> {
                                                                       actorsList);
                                                                 }
                                                                 setState(() =>
-                                                                    boolean =
-                                                                        !boolean);
+                                                                    isLiked =
+                                                                        !isLiked);
                                                               },
                                                             ),
                                                           ),

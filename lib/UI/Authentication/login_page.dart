@@ -18,6 +18,7 @@ class _LoginPageState extends State<LoginPage> {
   final emailInput = TextEditingController();
   final passwordInput = TextEditingController();
   final AuthService _authService = AuthService();
+
   String error = "";
   bool isLoading = false;
   @override
@@ -76,6 +77,9 @@ class _LoginPageState extends State<LoginPage> {
                       onPressed: () async {
                         setState(() {
                           isLoading = true;
+                          setState(() {
+                            error = "";
+                          });
                         });
                         try {
                           dynamic user = await _authService.signIn(
@@ -94,6 +98,7 @@ class _LoginPageState extends State<LoginPage> {
                             );
                           }
                         } on FirebaseAuthException catch (e) {
+                          // print(e.code);
                           if (e.code == "wrong-password") {
                             setState(
                                 () => error = "Wrong username or password");

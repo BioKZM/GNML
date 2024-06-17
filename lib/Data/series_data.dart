@@ -8,6 +8,10 @@ class SeriesData {
 
   String getSerieReleaseDate(data) {
     String date = data.first_air_date;
+    if (date == "") {
+      return "Unknown";
+    }
+
     String day = date.substring(8);
     date = date.substring(0, 7);
     String month = date.substring(5);
@@ -42,21 +46,32 @@ class SeriesData {
     return "$day $month $year";
   }
 
-  void addSeriesToList(
+  void addToSeriesList(
       List<dynamic> seriesList, Map<String, dynamic> serieMap) {
     seriesList.add(serieMap);
-    // return seriesList;
   }
 
   void removeFromSeriesList(List<dynamic> seriesList, int serieID) {
     seriesList.removeWhere((element) => element['serieID'] == serieID);
   }
 
-  void addFavoritesToSeriesList(List<dynamic> seriesList, List<dynamic> data,
+  void addFavoritesFromData(List<dynamic> seriesList, List<dynamic> data,
       int innerIndex, ValueNotifier<bool> isFavorite) {
     for (var x in seriesList) {
       if (x['serieID'] == data[innerIndex].id) {
         isFavorite.value = true;
+      }
+    }
+  }
+
+  void addFavoritesFromList(
+      List<dynamic> seriesList,
+      List<dynamic>? favoriteSeries,
+      int index,
+      ValueNotifier<bool> isFavorited) {
+    for (var x in favoriteSeries!) {
+      if (x['serieID'] == seriesList[index]['serieID']) {
+        isFavorited.value = true;
       }
     }
   }

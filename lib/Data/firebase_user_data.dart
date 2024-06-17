@@ -65,4 +65,21 @@ class FirebaseUserData {
     };
     await documentReference.update(updatedData);
   }
+
+  Future<void> createFavoritesList() async {
+    CollectionReference collectionReference =
+        FirebaseFirestore.instance.collection('brews');
+    DocumentReference documentReference =
+        collectionReference.doc('${user?.email}');
+    Map<String, dynamic> updatedData = {
+      "favorites": {
+        "games": [],
+        "movies": [],
+        "series": [],
+        "books": [],
+        "actors": [],
+      }
+    };
+    await documentReference.update(updatedData);
+  }
 }

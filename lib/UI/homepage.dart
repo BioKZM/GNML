@@ -8,11 +8,11 @@ import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:gnml/Helper/theme_helper.dart';
 import 'package:gnml/UI/User/profile_page.dart';
-import 'package:gnml/UI/games_page/games_page.dart';
-import 'package:gnml/UI/library_page/library_page.dart';
-import 'package:gnml/UI/movies_page/movies_page.dart';
-import 'package:gnml/UI/search_page/search_page.dart';
-import 'package:gnml/UI/series_page/series_page.dart';
+import 'package:gnml/UI/Games/games_page.dart';
+import 'package:gnml/UI/Library/library_page.dart';
+import 'package:gnml/UI/Movies/movies_page.dart';
+import 'package:gnml/UI/Search/search_page.dart';
+import 'package:gnml/UI/Series/series_page.dart';
 import 'package:gnml/UI/User/settings_page.dart';
 import 'package:gnml/Widgets/circularprogressindicator.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -162,6 +162,8 @@ class _HomePageState extends State<HomePage>
                   bottom: 10,
                   right: 10,
                   child: UpdatWidget(
+                    closeOnInstall: true,
+                    openOnDownload: false,
                     currentVersion: appVersion,
                     getLatestVersion: () async {
                       final data = await http.get(Uri.parse(
