@@ -18,7 +18,7 @@ class ActorsData {
     );
   }
 
-  void addFavoritesToActorsList(List<dynamic> actorsList, List<dynamic> data,
+  void addLikesFromActorsList(List<dynamic> actorsList, List<dynamic> data,
       int innerIndex, ValueNotifier<bool> isFavorite) {
     for (var x in actorsList) {
       if (x['actorID'] == data[innerIndex].id) {
@@ -27,23 +27,43 @@ class ActorsData {
     }
   }
 
-  Map<String, dynamic> getActorMap(
-      int actorID, List<dynamic> data, int innerIndex) {
+  void addFavoritesFromActorsList(
+      List<dynamic> actorsList,
+      List<dynamic>? favoriteActors,
+      int index,
+      ValueNotifier<bool> isFavorited) {
+    for (var x in favoriteActors!) {
+      if (x['actorID'] == actorsList[index]['actorID']) {
+        isFavorited.value = true;
+      }
+    }
+  }
+
+  Map<String, dynamic> getActorMap(List<dynamic> actorsList, int index) {
     Map<String, dynamic> actorMap = {
-      "actorID": actorID,
-      "imageURL": data[innerIndex].imageURL.toString(),
-      "actorName": data[innerIndex].name,
+      "actorID": actorsList[index]['actorID'],
+      "imageURL": actorsList[index]['imageURL'],
+      "actorName": actorsList[index]['actorName'],
     };
     return actorMap;
   }
 
-  Map<String, dynamic> getActorMapLibrary(
-      int actorID, List<dynamic> data, int innerIndex) {
+  Map<String, dynamic> getActorMapSearch(List<dynamic> data, int index) {
     Map<String, dynamic> actorMap = {
-      "actorID": actorID,
-      "imageURL": data[innerIndex]['imageURL'],
-      "actorName": data[innerIndex]['actorName'],
+      "actorID": data[index].id,
+      "imageURL": data[index].imageURL,
+      "actorName": data[index].name,
     };
     return actorMap;
   }
+
+  // Map<String, dynamic> getActorMapLibrary(
+  //     int actorID, List<dynamic> data, int innerIndex) {
+  //   Map<String, dynamic> actorMap = {
+  //     "actorID": actorID,
+  //     "imageURL": data[innerIndex]['imageURL'],
+  //     "actorName": data[innerIndex]['actorName'],
+  //   };
+  //   return actorMap;
+  // }
 }

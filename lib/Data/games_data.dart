@@ -33,11 +33,23 @@ class GamesData {
     return dateTime;
   }
 
-  void addFavoritesToGameList(List<dynamic> gamesList, List<GameModel> pageData,
+  void addFavoritesFromData(List<dynamic> gamesList, List<GameModel> pageData,
       int innerIndex, ValueNotifier<bool> isFavorite) {
     for (var x in gamesList) {
       if (x['gameID'] == pageData[innerIndex].id) {
         isFavorite.value = true;
+      }
+    }
+  }
+
+  void addFavoritesFromList(
+      List<dynamic> gamesList,
+      List<dynamic>? favoriteGames,
+      int index,
+      ValueNotifier<bool> isFavorited) {
+    for (var x in favoriteGames!) {
+      if (x['gameID'] == gamesList[index]['gameID']) {
+        isFavorited.value = true;
       }
     }
   }

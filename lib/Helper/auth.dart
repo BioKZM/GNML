@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
   var uuid = const Uuid();
 
   Future signIn(String email, String password) async {
@@ -31,6 +32,13 @@ class AuthService {
       'id': id,
       'username': username,
       'email': email,
+      'favorites': {
+        "games": [],
+        "movies": [],
+        "series": [],
+        "books": [],
+        "actors": [],
+      },
       'library': {
         "games": [],
         "movies": [],

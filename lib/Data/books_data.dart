@@ -35,11 +35,35 @@ class BooksData {
     booksList.removeWhere((element) => element['bookID'] == bookID);
   }
 
-  void addBooksToFavorites(
+  void addLikesFromBooksList(
       List<dynamic> booksList, String bookID, ValueNotifier<bool> isFavorite) {
     for (var x in booksList) {
       if (x['bookID'] == bookID) {
         isFavorite.value = true;
+      }
+    }
+  }
+
+  void addFavoritesBooksList(
+      List<dynamic> booksList,
+      List<dynamic>? favoriteBooks,
+      int index,
+      ValueNotifier<bool> isFavorited) {
+    for (var x in favoriteBooks!) {
+      if (x['bookID'] == booksList[index]['bookID']) {
+        isFavorited.value = true;
+      }
+    }
+  }
+
+  void addFavoritesBooksListSearch(
+      List<dynamic> booksList,
+      List<dynamic>? favoriteBooks,
+      int index,
+      ValueNotifier<bool> isFavorited) {
+    for (var x in favoriteBooks!) {
+      if (x['bookID'] == booksList[index].id) {
+        isFavorited.value = true;
       }
     }
   }

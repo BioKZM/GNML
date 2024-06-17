@@ -62,11 +62,23 @@ class MoviesData {
     moviesList.removeWhere((element) => element['movieID'] == movieID);
   }
 
-  void addFavoritesToMoviesList(List<dynamic> moviesList, List<dynamic> data,
+  void addFavoritesFromData(List<dynamic> moviesList, List<dynamic> data,
       int innerIndex, ValueNotifier<bool> isFavorite) {
     for (var x in moviesList) {
       if (x['movieID'] == data[innerIndex].id) {
         isFavorite.value = true;
+      }
+    }
+  }
+
+  void addFavoritesFromList(
+      List<dynamic> moviesList,
+      List<dynamic>? favoriteMovies,
+      int index,
+      ValueNotifier<bool> isFavorited) {
+    for (var x in favoriteMovies!) {
+      if (x['movieID'] == moviesList[index]['movieID']) {
+        isFavorited.value = true;
       }
     }
   }

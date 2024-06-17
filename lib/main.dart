@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -17,16 +17,19 @@ Future<void> main() async {
   String supabaseURL = dotenv.get("SUPABASE_URL");
   String supabaseKey = dotenv.get("SUPABASE_KEY");
   ThemeProvider themeProvider = ThemeProvider();
-  WindowProvider windowProvider = WindowProvider();
+  if (Platform.isWindows) {
+    WindowProvider windowProvider = WindowProvider();
+
+    await windowProvider.getSize();
+    await windowManager.ensureInitialized();
+    windowManager.setResizable(false);
+    WindowManager.instance
+        .setSize(Size(windowProvider.width, windowProvider.height));
+    WindowManager.instance.setMinimumSize(const Size(800, 600));
+    WindowManager.instance.setMaximumSize(const Size(1920, 1080));
+  }
   await themeProvider.getTheme();
-  await windowProvider.getSize();
   WidgetsFlutterBinding.ensureInitialized();
-  await windowManager.ensureInitialized();
-  windowManager.setResizable(false);
-  WindowManager.instance
-      .setSize(Size(windowProvider.width, windowProvider.height));
-  WindowManager.instance.setMinimumSize(const Size(800, 600));
-  WindowManager.instance.setMaximumSize(const Size(1920, 1080));
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await Supabase.initialize(
     url: supabaseURL,
