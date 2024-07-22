@@ -28,6 +28,10 @@ ThemeData getDarkTheme(themeColor) {
     useMaterial3: true,
     scaffoldBackgroundColor: const Color.fromARGB(255, 24, 24, 24),
     primaryColorDark: Color(themeColor),
+    iconButtonTheme: IconButtonThemeData(
+        style: IconButton.styleFrom(
+      highlightColor: Colors.transparent,
+    )),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: const Color.fromARGB(255, 0, 0, 0),
