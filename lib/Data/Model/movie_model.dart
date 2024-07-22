@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 class MovieModel {
   bool? adult;
   String? background_image_url;

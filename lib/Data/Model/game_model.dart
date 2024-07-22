@@ -111,11 +111,11 @@ dynamic getFirstReleaseDate(json) {
 dynamic getCoverURL(json, cover) {
   var url;
   if (cover == null) {
-    url = "images.igdb.com/igdb/image/upload/t_cover_big/null.png";
+    url = "images.igdb.com/igdb/image/upload/t_720p/null.png";
   } else {
     url = cover['url'];
 
-    url = "images.igdb.com/igdb/image/upload/t_cover_big/${url.substring(44)}";
+    url = "images.igdb.com/igdb/image/upload/t_720p/${url.substring(44)}";
   }
   return url;
 }

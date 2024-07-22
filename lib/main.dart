@@ -11,23 +11,28 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:window_manager/window_manager.dart';
 import 'firebase_options.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 Future<void> main() async {
   await dotenv.load(fileName: ".env");
   String supabaseURL = dotenv.get("SUPABASE_URL");
   String supabaseKey = dotenv.get("SUPABASE_KEY");
   ThemeProvider themeProvider = ThemeProvider();
-  if (Platform.isWindows) {
-    WindowProvider windowProvider = WindowProvider();
+  if (kIsWeb) {
+  } else {
+    if (Platform.isWindows) {
+      WindowProvider windowProvider = WindowProvider();
 
-    await windowProvider.getSize();
-    await windowManager.ensureInitialized();
-    windowManager.setResizable(false);
-    WindowManager.instance
-        .setSize(Size(windowProvider.width, windowProvider.height));
-    WindowManager.instance.setMinimumSize(const Size(800, 600));
-    WindowManager.instance.setMaximumSize(const Size(1920, 1080));
+      await windowProvider.getSize();
+      await windowManager.ensureInitialized();
+      windowManager.setResizable(false);
+      WindowManager.instance
+          .setSize(Size(windowProvider.width, windowProvider.height));
+      WindowManager.instance.setMinimumSize(const Size(800, 600));
+      WindowManager.instance.setMaximumSize(const Size(1920, 1080));
+    }
   }
+
   await themeProvider.getTheme();
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
