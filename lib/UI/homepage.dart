@@ -19,6 +19,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:updat/updat.dart';
 import 'package:http/http.dart' as http;
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -117,8 +118,8 @@ class _HomePageState extends State<HomePage>
                                           ),
                                         );
                                       },
-                                      icon: const Icon(
-                                          FluentIcons.settings_32_filled),
+                                      icon:
+                                          const FaIcon(FontAwesomeIcons.gears),
                                     ),
                                   ),
                                 ),
@@ -127,8 +128,8 @@ class _HomePageState extends State<HomePage>
                           ),
                           Expanded(
                             child: Padding(
-                              padding: const EdgeInsets.only(
-                                  left: 32, right: 32, bottom: 32),
+                              padding:
+                                  const EdgeInsets.only(left: 32, right: 32),
                               child: Card(
                                 elevation: 0,
                                 child: TabBarView(
