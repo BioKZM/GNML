@@ -10,6 +10,7 @@ import 'package:gnml/Logic/actorpage_logic.dart';
 import 'package:gnml/UI/Desktop/Details/movie_detail_page.dart';
 import 'package:gnml/UI/Desktop/Details/serie_detail_page.dart';
 import 'package:gnml/Widgets/circularprogressindicator.dart';
+import 'package:gnml/Widgets/custom_app_window.dart';
 import 'package:provider/provider.dart';
 
 class ActorDetailPage extends StatefulWidget {
@@ -137,31 +138,14 @@ class _ActorDetailPageState extends State<ActorDetailPage> {
                                   ImageFilter.blur(sigmaX: 100, sigmaY: 100),
                               child: Column(
                                 children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 12.0),
-                                    child: Row(
-                                      children: [
-                                        IconButton(
-                                          icon: const Icon(Icons.arrow_back),
-                                          onPressed: () {
-                                            Navigator.of(context).pop();
-                                          },
-                                        ),
-                                        const Padding(
-                                          padding: EdgeInsets.all(8.0),
-                                          child: Text(
-                                            "Actor Details",
-                                            style: TextStyle(
-                                                fontSize: 32,
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                  SizedBox(
+                                    height: 45,
+                                    width: MediaQuery.of(context).size.width,
+                                    child: CustomAppWindow(isExitable: true),
                                   ),
                                   Padding(
                                     padding: const EdgeInsets.fromLTRB(
-                                        64, 48, 64, 48),
+                                        64, 96, 64, 48),
                                     child: Table(
                                       children: [
                                         TableRow(

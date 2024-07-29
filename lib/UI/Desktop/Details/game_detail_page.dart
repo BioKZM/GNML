@@ -10,6 +10,7 @@ import 'package:gnml/Data/Model/game_model.dart';
 import 'package:gnml/Helper/theme_helper.dart';
 import 'package:gnml/Logic/gamepage_logic.dart';
 import 'package:gnml/Widgets/circularprogressindicator.dart';
+import 'package:gnml/Widgets/custom_app_window.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -145,31 +146,14 @@ class _GameDetailPageState extends State<GameDetailPage> {
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 12.0),
-                                    child: Row(
-                                      children: [
-                                        IconButton(
-                                          icon: const Icon(Icons.arrow_back),
-                                          onPressed: () {
-                                            Navigator.of(context).pop();
-                                          },
-                                        ),
-                                        const Padding(
-                                          padding: EdgeInsets.all(4.0),
-                                          child: Text(
-                                            "Game Details",
-                                            style: TextStyle(
-                                                fontSize: 32,
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                  SizedBox(
+                                    height: 45,
+                                    width: MediaQuery.of(context).size.width,
+                                    child: CustomAppWindow(isExitable: true),
                                   ),
                                   Padding(
                                     padding: const EdgeInsets.fromLTRB(
-                                        64, 48, 64, 48),
+                                        64, 96, 64, 48),
                                     child: Table(
                                       children: [
                                         TableRow(

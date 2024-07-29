@@ -2,8 +2,8 @@ import 'package:screen_retriever/screen_retriever.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class WindowProvider {
-  double _width = 800;
-  double _height = 600;
+  late double _width;
+  late double _height;
   // bool _isLightTheme = false;
   // int _themeColor = const Color.fromARGB(255, 180, 0, 0).value;
 

@@ -23,7 +23,7 @@ import 'package:provider/provider.dart';
 
 enum Views { listview, cardview }
 
-enum Sort { atoz, ztoa, dateup, datedown }
+enum Sort { atoz, ztoa }
 
 class LibraryPage extends StatefulWidget {
   const LibraryPage({super.key});
@@ -180,12 +180,6 @@ class _LibraryPageState extends State<LibraryPage>
                               moviesList = moviesList.reversed.toList();
                               booksList = booksList.reversed.toList();
                               actorsList = actorsList.reversed.toList();
-                            } else if (buttonSort == Sort.dateup) {
-                              gamesList = gamesList.reversed.toList();
-                              seriesList = seriesList.reversed.toList();
-                              moviesList = moviesList.reversed.toList();
-                              booksList = booksList.reversed.toList();
-                              actorsList = actorsList.reversed.toList();
                             }
 
                             return cardView(
@@ -224,12 +218,6 @@ class _LibraryPageState extends State<LibraryPage>
                               actorsList.sort((a, b) =>
                                   a['actorName'].compareTo(b['actorName']));
 
-                              gamesList = gamesList.reversed.toList();
-                              seriesList = seriesList.reversed.toList();
-                              moviesList = moviesList.reversed.toList();
-                              booksList = booksList.reversed.toList();
-                              actorsList = actorsList.reversed.toList();
-                            } else if (buttonSort == Sort.datedown) {
                               gamesList = gamesList.reversed.toList();
                               seriesList = seriesList.reversed.toList();
                               moviesList = moviesList.reversed.toList();
@@ -373,18 +361,6 @@ class _LibraryPageState extends State<LibraryPage>
               icon: Tooltip(
                 message: "Z to A",
                 child: SvgPicture.asset("assets/images/ztoa.svg"),
-              )),
-          ButtonSegment<Sort>(
-              value: Sort.dateup,
-              icon: Tooltip(
-                message: "Newest",
-                child: SvgPicture.asset("assets/images/datedown.svg"),
-              )),
-          ButtonSegment<Sort>(
-              value: Sort.datedown,
-              icon: Tooltip(
-                message: "Oldest",
-                child: SvgPicture.asset("assets/images/dateup.svg"),
               )),
         ],
         selected: <Sort>{buttonSort},
