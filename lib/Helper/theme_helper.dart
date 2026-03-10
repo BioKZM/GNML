@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeProvider extends ChangeNotifier {
   // final bool _isLightTheme = false;
-  int _themeColor = const Color.fromARGB(255, 180, 0, 0).value;
+  int _themeColor = const Color.fromARGB(255, 180, 0, 0).toARGB32();
 
   ThemeProvider() {
     getTheme();
@@ -28,7 +28,7 @@ class ThemeProvider extends ChangeNotifier {
   Future<void> getTheme() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     var themeColor = prefs.getInt("themeColor") ??
-        const Color.fromARGB(255, 180, 0, 0).value;
+        const Color.fromARGB(255, 180, 0, 0).toARGB32();
     setColor(themeColor);
   }
 }

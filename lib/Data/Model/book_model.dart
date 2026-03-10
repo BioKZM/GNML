@@ -1,12 +1,29 @@
-class BookModel {
+// ignore_for_file: non_constant_identifier_names
+import 'package:hive/hive.dart';
+import 'package:vault/Data/Model/base_content_model.dart';
+
+part 'book_model.g.dart';
+
+@HiveType(typeId: 3)
+class BookModel implements BaseContentModel {
+  @override
+  @HiveField(0)
   String? id;
+  @override
+  @HiveField(1)
   String? title;
   // String? subtitle;
+  @HiveField(2)
   List<dynamic>? authors;
   // List<dynamic>? publisher;
+  @HiveField(3)
   int? publish_year;
+  @HiveField(4)
   String? description;
+  @HiveField(5)
   int? page_count;
+  @override
+  @HiveField(6)
   String? imageURL;
 
   BookModel({

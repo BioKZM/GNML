@@ -1,0 +1,169 @@
+﻿Analyzing GNML...                                               
+
+   info - The member 'id' overrides an inherited member but isn't annotated with '@override' - lib\Data\Model\actor_model.dart:6:8 - annotate_overrides
+   info - The variable name 'place_of_birth' isn't a lowerCamelCase identifier - lib\Data\Model\actor_model.dart:12:11 - non_constant_identifier_names
+   info - The member 'imageURL' overrides an inherited member but isn't annotated with '@override' - lib\Data\Model\actor_model.dart:13:11 - annotate_overrides
+   info - The variable name 'movie_credits' isn't a lowerCamelCase identifier - lib\Data\Model\actor_model.dart:14:25 - non_constant_identifier_names
+   info - The variable name 'tv_credits' isn't a lowerCamelCase identifier - lib\Data\Model\actor_model.dart:15:25 - non_constant_identifier_names
+   info - The variable name 'place_of_birth' isn't a lowerCamelCase identifier - lib\Data\Model\actor_model.dart:24:10 - non_constant_identifier_names
+   info - The variable name 'movie_credits' isn't a lowerCamelCase identifier - lib\Data\Model\actor_model.dart:26:10 - non_constant_identifier_names
+   info - The variable name 'tv_credits' isn't a lowerCamelCase identifier - lib\Data\Model\actor_model.dart:27:10 - non_constant_identifier_names
+   info - The member 'id' overrides an inherited member but isn't annotated with '@override' - lib\Data\Model\book_model.dart:4:11 - annotate_overrides
+   info - The member 'title' overrides an inherited member but isn't annotated with '@override' - lib\Data\Model\book_model.dart:5:11 - annotate_overrides
+   info - The variable name 'publish_year' isn't a lowerCamelCase identifier - lib\Data\Model\book_model.dart:9:8 - non_constant_identifier_names
+   info - The variable name 'page_count' isn't a lowerCamelCase identifier - lib\Data\Model\book_model.dart:11:8 - non_constant_identifier_names
+   info - The member 'imageURL' overrides an inherited member but isn't annotated with '@override' - lib\Data\Model\book_model.dart:12:11 - annotate_overrides
+   info - The variable name 'publish_year' isn't a lowerCamelCase identifier - lib\Data\Model\book_model.dart:18:10 - non_constant_identifier_names
+   info - The variable name 'page_count' isn't a lowerCamelCase identifier - lib\Data\Model\book_model.dart:20:10 - non_constant_identifier_names
+   info - The member 'id' overrides an inherited member but isn't annotated with '@override' - lib\Data\Model\game_model.dart:9:8 - annotate_overrides
+   info - The variable name 'age_ratings' isn't a lowerCamelCase identifier - lib\Data\Model\game_model.dart:10:18 - non_constant_identifier_names
+   info - The variable name 'aggregated_rating' isn't a lowerCamelCase identifier - lib\Data\Model\game_model.dart:11:8 - non_constant_identifier_names
+   info - An uninitialized field should have an explicit type annotation - lib\Data\Model\game_model.dart:14:7 - prefer_typing_uninitialized_variables
+   info - The variable name 'first_release_date' isn't a lowerCamelCase identifier - lib\Data\Model\game_model.dart:15:8 - non_constant_identifier_names
+   info - The variable name 'game_engines' isn't a lowerCamelCase identifier - lib\Data\Model\game_model.dart:16:18 - non_constant_identifier_names
+   info - The variable name 'multiplayer_modes' isn't a lowerCamelCase identifier - lib\Data\Model\game_model.dart:19:18 - non_constant_identifier_names
+   info - The variable name 'player_perspectives' isn't a lowerCamelCase identifier - lib\Data\Model\game_model.dart:22:18 - non_constant_identifier_names
+   info - The variable name 'release_dates' isn't a lowerCamelCase identifier - lib\Data\Model\game_model.dart:24:18 - non_constant_identifier_names
+   info - The variable name 'language_support_type' isn't a lowerCamelCase identifier - lib\Data\Model\game_model.dart:33:18 - non_constant_identifier_names
+   info - The variable name 'language_support' isn't a lowerCamelCase identifier - lib\Data\Model\game_model.dart:34:26 - non_constant_identifier_names
+   info - The variable name 'image_id' isn't a lowerCamelCase identifier - lib\Data\Model\game_model.dart:36:11 - non_constant_identifier_names
+   info - The variable name 'involved_companies' isn't a lowerCamelCase identifier - lib\Data\Model\game_model.dart:38:18 - non_constant_identifier_names
+   info - The variable name 'screenshots_list' isn't a lowerCamelCase identifier - lib\Data\Model\game_model.dart:39:18 - non_constant_identifier_names
+   info - The variable name 'age_ratings' isn't a lowerCamelCase identifier - lib\Data\Model\game_model.dart:43:10 - non_constant_identifier_names
+   info - The variable name 'aggregated_rating' isn't a lowerCamelCase identifier - lib\Data\Model\game_model.dart:44:10 - non_constant_identifier_names
+   info - The variable name 'first_release_date' isn't a lowerCamelCase identifier - lib\Data\Model\game_model.dart:48:10 - non_constant_identifier_names
+   info - The variable name 'game_engines' isn't a lowerCamelCase identifier - lib\Data\Model\game_model.dart:49:10 - non_constant_identifier_names
+   info - The variable name 'multiplayer_modes' isn't a lowerCamelCase identifier - lib\Data\Model\game_model.dart:52:10 - non_constant_identifier_names
+   info - The variable name 'player_perspectives' isn't a lowerCamelCase identifier - lib\Data\Model\game_model.dart:55:10 - non_constant_identifier_names
+   info - The variable name 'release_dates' isn't a lowerCamelCase identifier - lib\Data\Model\game_model.dart:57:10 - non_constant_identifier_names
+   info - The variable name 'language_support_type' isn't a lowerCamelCase identifier - lib\Data\Model\game_model.dart:65:10 - non_constant_identifier_names
+   info - The variable name 'image_id' isn't a lowerCamelCase identifier - lib\Data\Model\game_model.dart:67:10 - non_constant_identifier_names
+   info - The variable name 'involved_companies' isn't a lowerCamelCase identifier - lib\Data\Model\game_model.dart:69:10 - non_constant_identifier_names
+   info - The variable name 'language_support' isn't a lowerCamelCase identifier - lib\Data\Model\game_model.dart:70:10 - non_constant_identifier_names
+   info - The variable name 'screenshots_list' isn't a lowerCamelCase identifier - lib\Data\Model\game_model.dart:71:10 - non_constant_identifier_names
+   info - An uninitialized variable should have an explicit type annotation - lib\Data\Model\game_model.dart:109:7 - prefer_typing_uninitialized_variables
+   info - An uninitialized variable should have an explicit type annotation - lib\Data\Model\game_model.dart:119:7 - prefer_typing_uninitialized_variables
+   info - An uninitialized variable should have an explicit type annotation - lib\Data\Model\game_model.dart:142:7 - prefer_typing_uninitialized_variables
+   info - The variable name 'background_image_url' isn't a lowerCamelCase identifier - lib\Data\Model\movie_model.dart:5:11 - non_constant_identifier_names
+   info - The member 'id' overrides an inherited member but isn't annotated with '@override' - lib\Data\Model\movie_model.dart:7:8 - annotate_overrides
+   info - The variable name 'original_language' isn't a lowerCamelCase identifier - lib\Data\Model\movie_model.dart:10:11 - non_constant_identifier_names
+   info - The variable name 'production_companies' isn't a lowerCamelCase identifier - lib\Data\Model\movie_model.dart:14:18 - non_constant_identifier_names
+   info - The member 'imageURL' overrides an inherited member but isn't annotated with '@override' - lib\Data\Model\movie_model.dart:15:11 - annotate_overrides
+   info - The variable name 'release_date' isn't a lowerCamelCase identifier - lib\Data\Model\movie_model.dart:16:11 - non_constant_identifier_names
+   info - The member 'title' overrides an inherited member but isn't annotated with '@override' - lib\Data\Model\movie_model.dart:18:11 - annotate_overrides
+   info - The variable name 'vote_average' isn't a lowerCamelCase identifier - lib\Data\Model\movie_model.dart:22:11 - non_constant_identifier_names
+   info - The variable name 'total_pages' isn't a lowerCamelCase identifier - lib\Data\Model\movie_model.dart:28:8 - non_constant_identifier_names
+   info - The variable name 'background_image_url' isn't a lowerCamelCase identifier - lib\Data\Model\movie_model.dart:34:10 - non_constant_identifier_names
+   info - The variable name 'original_language' isn't a lowerCamelCase identifier - lib\Data\Model\movie_model.dart:39:10 - non_constant_identifier_names
+   info - The variable name 'production_companies' isn't a lowerCamelCase identifier - lib\Data\Model\movie_model.dart:43:10 - non_constant_identifier_names
+   info - The variable name 'release_date' isn't a lowerCamelCase identifier - lib\Data\Model\movie_model.dart:45:10 - non_constant_identifier_names
+   info - The variable name 'vote_average' isn't a lowerCamelCase identifier - lib\Data\Model\movie_model.dart:51:10 - non_constant_identifier_names
+   info - The variable name 'total_pages' isn't a lowerCamelCase identifier - lib\Data\Model\movie_model.dart:57:10 - non_constant_identifier_names
+   info - The member 'id' overrides an inherited member but isn't annotated with '@override' - lib\Data\Model\serie_model.dart:6:8 - annotate_overrides
+   info - The member 'imageURL' overrides an inherited member but isn't annotated with '@override' - lib\Data\Model\serie_model.dart:8:11 - annotate_overrides
+   info - The variable name 'first_air_date' isn't a lowerCamelCase identifier - lib\Data\Model\serie_model.dart:9:11 - non_constant_identifier_names
+   info - The variable name 'vote_average' isn't a lowerCamelCase identifier - lib\Data\Model\serie_model.dart:11:11 - non_constant_identifier_names
+   info - The variable name 'created_by' isn't a lowerCamelCase identifier - lib\Data\Model\serie_model.dart:12:18 - non_constant_identifier_names
+   info - The variable name 'number_of_episodes' isn't a lowerCamelCase identifier - lib\Data\Model\serie_model.dart:15:8 - non_constant_identifier_names
+   info - The variable name 'number_of_seasons' isn't a lowerCamelCase identifier - lib\Data\Model\serie_model.dart:16:8 - non_constant_identifier_names
+   info - The variable name 'production_companies' isn't a lowerCamelCase identifier - lib\Data\Model\serie_model.dart:17:18 - non_constant_identifier_names
+   info - The variable name 'first_air_date' isn't a lowerCamelCase identifier - lib\Data\Model\serie_model.dart:31:10 - non_constant_identifier_names
+   info - The variable name 'vote_average' isn't a lowerCamelCase identifier - lib\Data\Model\serie_model.dart:33:10 - non_constant_identifier_names
+   info - The variable name 'created_by' isn't a lowerCamelCase identifier - lib\Data\Model\serie_model.dart:34:10 - non_constant_identifier_names
+   info - The variable name 'number_of_episodes' isn't a lowerCamelCase identifier - lib\Data\Model\serie_model.dart:37:10 - non_constant_identifier_names
+   info - The variable name 'number_of_seasons' isn't a lowerCamelCase identifier - lib\Data\Model\serie_model.dart:38:10 - non_constant_identifier_names
+   info - The variable name 'production_companies' isn't a lowerCamelCase identifier - lib\Data\Model\serie_model.dart:39:10 - non_constant_identifier_names
+  error - The argument type 'Object' can't be assigned to the parameter type 'DateTime'.  - lib\Data\games_data.dart:31:50 - argument_type_not_assignable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Data\games_data.dart:82:29 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Data\games_data.dart:85:28 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Data\games_data.dart:88:31 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Data\games_data.dart:91:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Data\games_data.dart:94:31 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Data\games_data.dart:97:29 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Data\games_data.dart:100:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Data\games_data.dart:103:30 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Data\games_data.dart:106:29 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Data\games_data.dart:109:34 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Data\games_data.dart:112:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Data\games_data.dart:115:29 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Data\games_data.dart:118:31 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Data\games_data.dart:121:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Data\games_data.dart:124:30 - deprecated_member_use
+  error - The argument type 'TabBarTheme' can't be assigned to the parameter type 'TabBarThemeData?'.  - lib\Data\theme_data.dart:17:18 - argument_type_not_assignable
+  error - Target of URI doesn't exist: 'package:gnml/UI/mobile_homepage.dart' - lib\Helper\redirect.dart:6:8 - uri_does_not_exist
+  error - The name 'MobileHomePage' isn't a class - lib\Helper\redirect.dart:31:28 - creation_with_non_type
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\Helper\theme_helper.dart:6:58 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\Helper\theme_helper.dart:31:46 - deprecated_member_use
+  error - Target of URI doesn't exist: 'package:gnml/Data/Model/music_model.dart' - lib\Logic\musicpage_logic.dart:3:8 - uri_does_not_exist
+  error - The name 'MusicModel' isn't a type, so it can't be used as a type argument - lib\Logic\musicpage_logic.dart:27:15 - non_type_as_type_argument
+  error - The name 'MusicModel' isn't a type, so it can't be used as a type argument - lib\Logic\musicpage_logic.dart:28:10 - non_type_as_type_argument
+  error - Undefined class 'MusicModel' - lib\Logic\musicpage_logic.dart:40:11 - undefined_class
+  error - Undefined name 'MusicModel' - lib\Logic\musicpage_logic.dart:40:35 - undefined_identifier
+  error - The name 'MusicModel' isn't a type, so it can't be used as a type argument - lib\Logic\musicpage_logic.dart:49:15 - non_type_as_type_argument
+  error - The name 'MusicModel' isn't a type, so it can't be used as a type argument - lib\Logic\musicpage_logic.dart:50:10 - non_type_as_type_argument
+  error - Undefined class 'MusicModel' - lib\Logic\musicpage_logic.dart:61:11 - undefined_class
+  error - Undefined name 'MusicModel' - lib\Logic\musicpage_logic.dart:61:35 - undefined_identifier
+  error - The name 'MusicModel' isn't a type, so it can't be used as a type argument - lib\Logic\musicpage_logic.dart:70:15 - non_type_as_type_argument
+  error - The name 'MusicModel' isn't a type, so it can't be used as a type argument - lib\Logic\musicpage_logic.dart:71:10 - non_type_as_type_argument
+  error - Undefined class 'MusicModel' - lib\Logic\musicpage_logic.dart:81:11 - undefined_class
+  error - Undefined name 'MusicModel' - lib\Logic\musicpage_logic.dart:81:35 - undefined_identifier
+   info - Don't use 'BuildContext's across async gaps - lib\UI\Authentication\login_page.dart:91:35 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\UI\Authentication\register_page.dart:126:33 - use_build_context_synchronously
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\UI\Desktop\Details\actors_detail_page.dart:133:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\UI\Desktop\Details\actors_detail_page.dart:178:60 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\UI\Desktop\Details\actors_detail_page.dart:338:64 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\UI\Desktop\Details\actors_detail_page.dart:546:64 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\UI\Desktop\Details\actors_detail_page.dart:750:64 - deprecated_member_use
+  error - The property 'imageURL' can't be unconditionally accessed because the receiver can be 'null' - lib\UI\Desktop\Details\books_detail_page.dart:98:40 - unchecked_use_of_nullable_value
+  error - The property 'title' can't be unconditionally accessed because the receiver can be 'null' - lib\UI\Desktop\Details\books_detail_page.dart:99:40 - unchecked_use_of_nullable_value
+  error - The property 'imageURL' can't be unconditionally accessed because the receiver can be 'null' - lib\UI\Desktop\Details\books_detail_page.dart:113:54 - unchecked_use_of_nullable_value
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\UI\Desktop\Details\books_detail_page.dart:119:47 - deprecated_member_use
+  error - The property 'imageURL' can't be unconditionally accessed because the receiver can be 'null' - lib\UI\Desktop\Details\books_detail_page.dart:156:70 - unchecked_use_of_nullable_value
+  error - The property 'title' can't be unconditionally accessed because the receiver can be 'null' - lib\UI\Desktop\Details\books_detail_page.dart:238:64 - unchecked_use_of_nullable_value
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\UI\Desktop\Details\game_detail_page.dart:139:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\UI\Desktop\Details\game_detail_page.dart:195:66 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\UI\Desktop\Details\game_detail_page.dart:429:64 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\UI\Desktop\Details\game_detail_page.dart:482:64 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\UI\Desktop\Details\game_detail_page.dart:596:64 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\UI\Desktop\Details\game_detail_page.dart:637:64 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\UI\Desktop\Details\game_detail_page.dart:1422:34 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\UI\Desktop\Details\game_detail_page.dart:1442:34 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\UI\Desktop\Details\movie_detail_page.dart:133:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\UI\Desktop\Details\movie_detail_page.dart:183:62 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\UI\Desktop\Details\movie_detail_page.dart:371:64 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\UI\Desktop\Details\movie_detail_page.dart:554:64 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\UI\Desktop\Details\movie_detail_page.dart:734:64 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\UI\Desktop\Details\serie_detail_page.dart:134:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\UI\Desktop\Details\serie_detail_page.dart:184:62 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\UI\Desktop\Details\serie_detail_page.dart:486:64 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\UI\Desktop\Details\serie_detail_page.dart:678:64 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\UI\Desktop\Details\serie_detail_page.dart:858:64 - deprecated_member_use
+  error - The argument type 'Object' can't be assigned to the parameter type 'DateTime'.  - lib\UI\Desktop\Games\data\games_page_data.dart:70:50 - argument_type_not_assignable
+   info - The file name 'FavoritesWidget.dart' isn't a lower_case_with_underscores identifier - lib\UI\Desktop\Games\widget\FavoritesWidget.dart:1:1 - file_names
+   info - The file name 'InfoWidget.dart' isn't a lower_case_with_underscores identifier - lib\UI\Desktop\Games\widget\InfoWidget.dart:1:1 - file_names
+   info - The file name 'LikeWidget.dart' isn't a lower_case_with_underscores identifier - lib\UI\Desktop\Games\widget\LikeWidget.dart:1:1 - file_names
+   info - An uninitialized field should have an explicit type annotation - lib\UI\Desktop\Games\widget\LikeWidget.dart:29:9 - prefer_typing_uninitialized_variables
+   info - The file name 'FavoritesWidget.dart' isn't a lower_case_with_underscores identifier - lib\UI\Desktop\Movies\widget\FavoritesWidget.dart:1:1 - file_names
+   info - An uninitialized field should have an explicit type annotation - lib\UI\Desktop\Movies\widget\FavoritesWidget.dart:28:9 - prefer_typing_uninitialized_variables
+   info - The file name 'InfoWidget.dart' isn't a lower_case_with_underscores identifier - lib\UI\Desktop\Movies\widget\InfoWidget.dart:1:1 - file_names
+   info - An uninitialized field should have an explicit type annotation - lib\UI\Desktop\Movies\widget\InfoWidget.dart:15:9 - prefer_typing_uninitialized_variables
+   info - The file name 'LikeWidget.dart' isn't a lower_case_with_underscores identifier - lib\UI\Desktop\Movies\widget\LikeWidget.dart:1:1 - file_names
+   info - An uninitialized field should have an explicit type annotation - lib\UI\Desktop\Movies\widget\LikeWidget.dart:24:9 - prefer_typing_uninitialized_variables
+  error - The named parameter 'bookID' is required, but there's no corresponding argument - lib\UI\Desktop\Search\search_page.dart:152:39 - missing_required_argument
+  error - The named parameter 'id' isn't defined - lib\UI\Desktop\Search\search_page.dart:152:55 - undefined_named_parameter
+   info - The file name 'FavoritesWidget.dart' isn't a lower_case_with_underscores identifier - lib\UI\Desktop\Series\widget\FavoritesWidget.dart:1:1 - file_names
+   info - An uninitialized field should have an explicit type annotation - lib\UI\Desktop\Series\widget\FavoritesWidget.dart:30:9 - prefer_typing_uninitialized_variables
+   info - The file name 'InfoWidget.dart' isn't a lower_case_with_underscores identifier - lib\UI\Desktop\Series\widget\InfoWidget.dart:1:1 - file_names
+   info - An uninitialized field should have an explicit type annotation - lib\UI\Desktop\Series\widget\InfoWidget.dart:15:9 - prefer_typing_uninitialized_variables
+   info - The file name 'LikeWidget.dart' isn't a lower_case_with_underscores identifier - lib\UI\Desktop\Series\widget\LikeWidget.dart:1:1 - file_names
+   info - An uninitialized field should have an explicit type annotation - lib\UI\Desktop\Series\widget\LikeWidget.dart:24:9 - prefer_typing_uninitialized_variables
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\UI\Desktop\User\profile_page.dart:114:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\UI\Desktop\User\profile_page.dart:122:64 - deprecated_member_use
+   info - Don't use 'BuildContext's across async gaps - lib\UI\Desktop\User\profile_page.dart:333:53 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\UI\Desktop\User\profile_page.dart:362:53 - use_build_context_synchronously
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\UI\Desktop\User\settings_page.dart:202:59 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\UI\Desktop\User\settings_page.dart:251:49 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\UI\homepage.dart:198:61 - deprecated_member_use
+   info - The file name 'shimmerCard.dart' isn't a lower_case_with_underscores identifier - lib\Widgets\shimmerCard.dart:1:1 - file_names
+   info - The file name 'shimmerSmallCard.dart' isn't a lower_case_with_underscores identifier - lib\Widgets\shimmerSmallCard.dart:1:1 - file_names
+

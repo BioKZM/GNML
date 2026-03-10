@@ -1,12 +1,10 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:gnml/Helper/theme_helper.dart';
-import 'package:gnml/UI/Desktop/Series/ui/airing_today/airing_today.dart';
-import 'package:gnml/UI/Desktop/Series/ui/on_air/on_air.dart';
-import 'package:gnml/UI/Desktop/Series/ui/popular_series/popular_series.dart';
-import 'package:gnml/UI/Desktop/Series/ui/top_rated/top_rated.dart';
-import 'package:gnml/Widgets/circularprogressindicator.dart';
+import 'package:vault/Helper/theme_helper.dart';
+import 'package:vault/Logic/seriespage_logic.dart';
+import 'package:vault/UI/Desktop/Details/serie_detail_page.dart';
+import 'package:vault/Widgets/content_builder.dart';
+import 'package:vault/Widgets/content_section.dart';
+import 'package:vault/Widgets/generic_content_card.dart';
 import 'package:provider/provider.dart';
 
 class SeriesPage extends StatefulWidget {
@@ -16,137 +14,110 @@ class SeriesPage extends StatefulWidget {
   State<SeriesPage> createState() => _SeriesPageState();
 }
 
-class _SeriesPageState extends State<SeriesPage> {
-  User? user = FirebaseAuth.instance.currentUser;
-  bool boolean = false;
-  late PageController _pageController;
-  int pageIndexOnTheAir = 1;
-  int pageIndexTopRated = 1;
-  int pageIndexUpcoming = 1;
+class _SeriesPageState extends State<SeriesPage>
+    with AutomaticKeepAliveClientMixin {
+  late PageController _popularController;
+  late PageController _onAirController;
+  late PageController _topRatedController;
+  late PageController _airingTodayController;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(
-      initialPage: 0,
-    );
-  }
-
-  Future<DocumentSnapshot> getData() async {
-    CollectionReference collectionReference =
-        FirebaseFirestore.instance.collection('brews');
-
-    DocumentReference documentReference =
-        collectionReference.doc('${user!.email}');
-
-    DocumentSnapshot documentSnapshot = await documentReference.get();
-
-    return documentSnapshot;
-  }
-
-  Future<void> updateData(
-      List games, List movies, List series, List books, List actors) async {
-    CollectionReference collectionReference =
-        FirebaseFirestore.instance.collection('brews');
-    DocumentReference documentReference =
-        collectionReference.doc('${user!.email}');
-    Map<String, dynamic> updatedData = {
-      "library": {
-        "games": games,
-        "movies": movies,
-        "series": series,
-        "books": books,
-        "actors": actors,
-      }
-    };
-
-    await documentReference.update(updatedData);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    int themeColor = Provider.of<ThemeProvider>(context).color;
-    return Scaffold(
-      body: FutureBuilder(
-        future: getData(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            Map<String, dynamic> list =
-                snapshot.data!.data() as Map<String, dynamic>;
-            List gamesList = list['library']['games'];
-            List moviesList = list['library']['movies'];
-            List seriesList = list['library']['series'];
-            List booksList = list['library']['books'];
-            List actorsList = list['library']['actors'];
-            Map<String, dynamic> favoritesList = list['favorites'];
-            return SingleChildScrollView(
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      IconButton(
-                        onPressed: () {
-                          setState(() {});
-                        },
-                        icon: const Icon(Icons.refresh),
-                      ),
-                    ],
-                  ),
-                  popularSeries(
-                      user,
-                      seriesList,
-                      favoritesList,
-                      themeColor,
-                      gamesList,
-                      moviesList,
-                      booksList,
-                      actorsList,
-                      _pageController),
-                  onAirSeries(
-                      user,
-                      seriesList,
-                      favoritesList,
-                      themeColor,
-                      gamesList,
-                      moviesList,
-                      booksList,
-                      actorsList,
-                      pageIndexOnTheAir),
-                  topRatedSeries(
-                      user,
-                      seriesList,
-                      favoritesList,
-                      themeColor,
-                      gamesList,
-                      moviesList,
-                      booksList,
-                      actorsList,
-                      pageIndexTopRated),
-                  airingTodaySeries(
-                      user,
-                      seriesList,
-                      favoritesList,
-                      themeColor,
-                      gamesList,
-                      moviesList,
-                      booksList,
-                      actorsList,
-                      pageIndexOnTheAir),
-                ],
-              ),
-            );
-          } else {
-            return const CustomCPI();
-          }
-        },
-      ),
-    );
+    _popularController = PageController();
+    _onAirController = PageController();
+    _topRatedController = PageController();
+    _airingTodayController = PageController();
   }
 
   @override
   void dispose() {
-    _pageController.dispose();
+    _popularController.dispose();
+    _onAirController.dispose();
+    _topRatedController.dispose();
+    _airingTodayController.dispose();
     super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    final themeColor = Provider.of<ThemeProvider>(context).color;
+    return Scaffold(
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                IconButton(
+                  onPressed: () => setState(() {}),
+                  icon: const Icon(Icons.refresh),
+                ),
+              ],
+            ),
+            _buildSection(
+              "Popular Series",
+              SeriesPageLogic().getPopularSeries(),
+              _popularController,
+              themeColor,
+            ),
+            _buildSection(
+              "On The Air",
+              SeriesPageLogic().getOnTheAirSeries(1),
+              _onAirController,
+              themeColor,
+            ),
+            _buildSection(
+              "Airing Today",
+              SeriesPageLogic().getAiringTodaySeries(1),
+              _airingTodayController,
+              themeColor,
+            ),
+            _buildSection(
+              "Top Rated Series",
+              SeriesPageLogic().getTopRatedSeries(1),
+              _topRatedController,
+              themeColor,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSection(
+    String title,
+    Future<List<dynamic>> future,
+    PageController controller,
+    int themeColor,
+  ) {
+    return ContentSection(
+      title: title,
+      pageController: controller,
+      child: ContentBuilder(
+        future: future,
+        onRetry: () => setState(() {}),
+        builder: (context, data) {
+          return ListView.builder(
+            controller: controller,
+            scrollDirection: Axis.horizontal,
+            itemCount: data.length,
+            itemBuilder: (context, index) {
+              final item = data[index];
+              return GenericContentCard(
+                item: item,
+                type: ContentType.series,
+                themeColor: themeColor,
+                detailPage: SerieDetailPage(serieID: item.id!),
+              );
+            },
+          );
+        },
+      ),
+    );
   }
 }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gnml/Logic/moviepage_logic.dart';
+import 'package:vault/Logic/moviepage_logic.dart';
 
 class MoviesData {
   Future<List<dynamic>> searchMovies(String query, int page) async {

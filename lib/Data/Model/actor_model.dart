@@ -1,14 +1,37 @@
-class ActorModel {
+// ignore_for_file: non_constant_identifier_names
+import 'package:hive/hive.dart';
+import 'package:vault/Data/Model/base_content_model.dart';
+
+part 'actor_model.g.dart';
+
+@HiveType(typeId: 4)
+class ActorModel implements BaseContentModel {
+  @override
+  @HiveField(0)
+  String? get title => name;
+  @override
+  @HiveField(1)
   int? id;
+  @HiveField(2)
   String? biography;
+  @HiveField(3)
   String? birthday;
+  @HiveField(4)
   String? deathday;
+  @HiveField(5)
   String? homepage;
+  @HiveField(6)
   String? name;
+  @HiveField(7)
   String? place_of_birth;
+  @override
+  @HiveField(8)
   String? imageURL;
+  @HiveField(9)
   Map<String, dynamic>? movie_credits;
+  @HiveField(10)
   Map<String, dynamic>? tv_credits;
+  @HiveField(11)
   List<dynamic>? images;
 
   ActorModel({
@@ -40,15 +63,14 @@ class ActorModel {
 }
 
 String getImageURL(json) {
-  var image_url = json['profile_path'];
-  if (image_url == null) {
-    image_url ??=
+  var imageUrl = json['profile_path'];
+  if (imageUrl == null) {
+    imageUrl ??=
         "https://firebasestorage.googleapis.com/v0/b/scheduleme-adde6.appspot.com/o/placeholder.jpg?alt=media&token=9cfa9b9d-eb60-409b-8a5f-b3b54a5c1b10";
   } else {
-    image_url =
-        "https://image.tmdb.org/t/p/original/${image_url?.substring(1)}";
+    imageUrl = "https://image.tmdb.org/t/p/original/${imageUrl?.substring(1)}";
   }
-  return image_url;
+  return imageUrl;
 }
 
 dynamic getDeathday(json) {

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gnml/Helper/theme_helper.dart';
+import 'package:vault/Helper/theme_helper.dart';
 import 'package:provider/provider.dart';
 
 ThemeData getAppTheme(BuildContext context) {
@@ -14,7 +14,7 @@ ThemeData getDarkTheme(themeColor) {
 
   ThemeData themeData = ThemeData();
   themeData = ThemeData(
-    tabBarTheme: TabBarTheme(
+    tabBarTheme: TabBarThemeData(
       unselectedLabelColor: brightness < brightnessThreshold
           ? Colors.grey.shade400
           : Colors.black54,
@@ -47,8 +47,6 @@ ThemeData getDarkTheme(themeColor) {
       onSecondary: Colors.white,
       error: Color(themeColor),
       onError: Color(themeColor),
-      background: Colors.black,
-      onBackground: Colors.grey.shade600,
       surface: const Color.fromARGB(255, 37, 35, 42),
       onSurface: Colors.white,
       shadow: const Color(0xFF000000),

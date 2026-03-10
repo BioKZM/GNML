@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:gnml/Data/Model/serie_model.dart';
+import 'package:vault/Data/Model/serie_model.dart';
 import 'package:http/http.dart' as http;
 
 class SeriesPageLogic {

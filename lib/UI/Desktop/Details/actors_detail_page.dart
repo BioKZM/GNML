@@ -1,16 +1,16 @@
 import 'dart:convert';
 import 'dart:ui';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:gnml/Data/Model/actor_model.dart';
-import 'package:gnml/Helper/theme_helper.dart';
-import 'package:gnml/Logic/actorpage_logic.dart';
-import 'package:gnml/UI/Desktop/Details/movie_detail_page.dart';
-import 'package:gnml/UI/Desktop/Details/serie_detail_page.dart';
-import 'package:gnml/Widgets/circularprogressindicator.dart';
-import 'package:gnml/Widgets/custom_app_window.dart';
+import 'package:vault/Data/Model/actor_model.dart';
+import 'package:vault/Helper/content_type.dart';
+import 'package:vault/Helper/theme_helper.dart';
+import 'package:vault/Logic/actorpage_logic.dart';
+import 'package:vault/UI/Desktop/Details/movie_detail_page.dart';
+import 'package:vault/UI/Desktop/Details/serie_detail_page.dart';
+import 'package:vault/Providers/library_provider.dart';
+import 'package:vault/Widgets/circularprogressindicator.dart';
+import 'package:vault/Widgets/custom_app_window.dart';
 import 'package:provider/provider.dart';
 
 class ActorDetailPage extends StatefulWidget {
@@ -25,9 +25,6 @@ class ActorDetailPage extends StatefulWidget {
 }
 
 class _ActorDetailPageState extends State<ActorDetailPage> {
-  User? user = FirebaseAuth.instance.currentUser;
-  bool boolean = false;
-
   @override
   void initState() {
     super.initState();
@@ -36,38 +33,6 @@ class _ActorDetailPageState extends State<ActorDetailPage> {
   @override
   Widget build(BuildContext context) {
     int themeColor = Provider.of<ThemeProvider>(context).color;
-    Future<DocumentSnapshot> getData() async {
-      CollectionReference collectionReference =
-          FirebaseFirestore.instance.collection('brews');
-
-      DocumentReference documentReference =
-          collectionReference.doc('${user!.email}');
-
-      DocumentSnapshot documentSnapshot = await documentReference.get();
-
-      return documentSnapshot;
-    }
-
-    Future<void> updateData(
-        List games, List movies, List series, List books, List actors) async {
-      CollectionReference collectionReference =
-          FirebaseFirestore.instance.collection('brews');
-      DocumentReference documentReference =
-          collectionReference.doc('${user!.email}');
-
-      Map<String, dynamic> updatedData = {
-        "library": {
-          "games": games,
-          "movies": movies,
-          "series": series,
-          "books": books,
-          "actors": actors,
-        }
-      };
-
-      await documentReference.update(updatedData);
-    }
-
     PageController pageController = PageController(
       initialPage: 0,
     );
@@ -88,822 +53,823 @@ class _ActorDetailPageState extends State<ActorDetailPage> {
                 .decode(data.biography.toString().runes.toList(),
                     allowMalformed: true)
                 .replaceAll("�", "");
-            return FutureBuilder(
-                future: getData(),
-                builder: (context, AsyncSnapshot<DocumentSnapshot> snapshot) {
-                  if (snapshot.hasData &&
-                      snapshot.connectionState == ConnectionState.done) {
-                    Map<String, dynamic> list =
-                        snapshot.data!.data() as Map<String, dynamic>;
-                    List gamesList = list['library']['games'];
-                    List moviesList = list['library']['movies'];
-                    List seriesList = list['library']['series'];
-                    List booksList = list['library']['books'];
-                    List actorsList = list['library']['actors'];
-                    Map<String, dynamic> actorMap = {
-                      "actorID": widget.actorID,
-                      "imageURL": data.imageURL,
-                      "actorName": data.name,
-                    };
-                    for (var x in actorsList) {
-                      if (x['actorID'] == widget.actorID) {
-                        boolean = true;
-                      }
-                    }
-                    return Scaffold(
-                      // appBar: AppBar(
-                      //   title: const Text("Actor Details"),
-                      //   backgroundColor: Colors.transparent,
-                      //   leading: IconButton(
-                      //     icon: const Icon(Icons.arrow_back),
-                      //     onPressed: () {
-                      //       Navigator.of(context).pop();
-                      //     },
-                      //   ),
-                      // ),
-                      body: Container(
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: NetworkImage(data.imageURL.toString()),
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        child: Container(
-                          height: double.maxFinite,
-                          color: Colors.black.withOpacity(0.7),
-                          child: SingleChildScrollView(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            child: BackdropFilter(
-                              filter:
-                                  ImageFilter.blur(sigmaX: 100, sigmaY: 100),
-                              child: Column(
-                                children: [
-                                  SizedBox(
-                                    height: 45,
-                                    width: MediaQuery.of(context).size.width,
-                                    child: CustomAppWindow(isExitable: true),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                        64, 96, 64, 48),
-                                    child: Table(
+            return Consumer<LibraryProvider>(
+              builder: (context, libraryProvider, child) {
+                final isLiked = libraryProvider.isInLibrary(
+                  ContentType.actors,
+                  widget.actorID,
+                );
+                return Scaffold(
+                  // appBar: AppBar(
+                  //   title: const Text("Actor Details"),
+                  //   backgroundColor: Colors.transparent,
+                  //   leading: IconButton(
+                  //     icon: const Icon(Icons.arrow_back),
+                  //     onPressed: () {
+                  //       Navigator.of(context).pop();
+                  //     },
+                  //   ),
+                  // ),
+                  body: Container(
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: NetworkImage(data.imageURL.toString()),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    child: Container(
+                      height: double.maxFinite,
+                      color: Colors.black.withValues(alpha: 0.7),
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 100, sigmaY: 100),
+                          child: Column(
+                            children: [
+                              SizedBox(
+                                height: 45,
+                                width: MediaQuery.of(context).size.width,
+                                child: CustomAppWindow(isExitable: true),
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.fromLTRB(64, 96, 64, 48),
+                                child: Table(
+                                  children: [
+                                    TableRow(
                                       children: [
-                                        TableRow(
-                                          children: [
-                                            TableCell(
-                                              child: Column(
-                                                children: [
-                                                  Card(
-                                                    elevation: 0,
-                                                    child: SizedBox(
-                                                      height: 350,
-                                                      child: ClipRRect(
-                                                        borderRadius:
-                                                            const BorderRadius
-                                                                .all(
-                                                                Radius.circular(
-                                                                    12)),
-                                                        child: Image(
-                                                            image: NetworkImage(
-                                                                data.imageURL
-                                                                    .toString()),
-                                                            fit: BoxFit.fill),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  StatefulBuilder(builder:
-                                                      (context, setState) {
-                                                    return Card(
-                                                      color: Colors.grey
-                                                          .withOpacity(0.3),
-                                                      child: Tooltip(
-                                                        message:
-                                                            "Remove from Library",
-                                                        child: IconButton(
-                                                          highlightColor:
-                                                              Color(themeColor),
-                                                          hoverColor: Colors
-                                                              .transparent,
-                                                          icon: boolean
-                                                              ? Tooltip(
-                                                                  message:
-                                                                      "Add to Library",
-                                                                  child: Icon(
-                                                                    Icons
-                                                                        .favorite,
-                                                                    color: Color(
-                                                                        themeColor),
-                                                                  ),
-                                                                )
-                                                              : const Icon(Icons
-                                                                  .favorite_outline),
-                                                          onPressed: () {
-                                                            if (boolean) {
-                                                              actorsList.removeWhere(
-                                                                  (element) =>
-                                                                      element[
-                                                                          'actorID'] ==
-                                                                      widget
-                                                                          .actorID);
-                                                              updateData(
-                                                                  gamesList,
-                                                                  moviesList,
-                                                                  seriesList,
-                                                                  booksList,
-                                                                  actorsList);
-                                                            } else {
-                                                              actorsList.add(
-                                                                  actorMap);
-                                                              updateData(
-                                                                  gamesList,
-                                                                  moviesList,
-                                                                  seriesList,
-                                                                  booksList,
-                                                                  actorsList);
-                                                            }
-                                                            setState(() =>
-                                                                boolean =
-                                                                    !boolean);
-                                                          },
-                                                        ),
-                                                      ),
-                                                    );
-                                                  })
-                                                ],
-                                              ),
-                                            ),
-                                            TableCell(
-                                              child: Padding(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        horizontal: 64),
+                                        TableCell(
+                                          child: Column(
+                                            children: [
+                                              Card(
+                                                elevation: 0,
                                                 child: SizedBox(
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
+                                                  height: 350,
+                                                  child: ClipRRect(
+                                                    borderRadius:
+                                                        const BorderRadius.all(
+                                                            Radius.circular(
+                                                                12)),
+                                                    child: Image(
+                                                        image: NetworkImage(data
+                                                            .imageURL
+                                                            .toString()),
+                                                        fit: BoxFit.fill),
+                                                  ),
+                                                ),
+                                              ),
+                                              Card(
+                                                color: Colors.grey
+                                                    .withValues(alpha: 0.3),
+                                                child: IconButton(
+                                                  highlightColor:
+                                                      Color(themeColor),
+                                                  hoverColor:
+                                                      Colors.transparent,
+                                                  icon: isLiked
+                                                      ? Tooltip(
+                                                          message:
+                                                              "Remove from Library",
+                                                          child: Icon(
+                                                            Icons.favorite,
+                                                            color: Color(
+                                                                themeColor),
+                                                          ),
+                                                        )
+                                                      : const Tooltip(
+                                                          message:
+                                                              "Add to Library",
+                                                          child: Icon(Icons
+                                                              .favorite_outline),
+                                                        ),
+                                                  onPressed: () {
+                                                    if (isLiked) {
+                                                      libraryProvider
+                                                          .removeFromLibrary(
+                                                        ContentType.actors,
+                                                        widget.actorID,
+                                                      );
+                                                    } else {
+                                                      libraryProvider
+                                                          .addOrUpdateItem(
+                                                        type:
+                                                            ContentType.actors,
+                                                        id: widget.actorID,
+                                                        title: data.name,
+                                                        imageUrl: data.imageURL,
+                                                        extra: {
+                                                          "id": widget.actorID,
+                                                          "type": "actor",
+                                                          "title": data.name,
+                                                          "imageURL":
+                                                              data.imageURL,
+                                                          "folder": "library",
+                                                        },
+                                                      );
+                                                    }
+                                                  },
+                                                ),
+                                              )
+                                            ],
+                                          ),
+                                        ),
+                                        TableCell(
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 64),
+                                            child: SizedBox(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(data.name.toString(),
+                                                      style: const TextStyle(
+                                                          fontSize: 50,
+                                                          fontFamily:
+                                                              'RobotoBold')),
+                                                  const Divider(
+                                                      color:
+                                                          Colors.transparent),
+                                                  const Divider(
+                                                      color:
+                                                          Colors.transparent),
+                                                  const Divider(
+                                                      color:
+                                                          Colors.transparent),
+                                                  const Divider(
+                                                      color:
+                                                          Colors.transparent),
+                                                  Row(
                                                     children: [
-                                                      Text(data.name.toString(),
-                                                          style: const TextStyle(
-                                                              fontSize: 50,
-                                                              fontFamily:
-                                                                  'RobotoBold')),
-                                                      const Divider(
-                                                          color: Colors
-                                                              .transparent),
-                                                      const Divider(
-                                                          color: Colors
-                                                              .transparent),
-                                                      const Divider(
-                                                          color: Colors
-                                                              .transparent),
-                                                      const Divider(
-                                                          color: Colors
-                                                              .transparent),
-                                                      Row(
+                                                      const Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
                                                         children: [
-                                                          const Column(
-                                                            crossAxisAlignment:
-                                                                CrossAxisAlignment
-                                                                    .start,
-                                                            children: [
-                                                              Text(
-                                                                  "Date of Birth:"),
-                                                              Text(
-                                                                  "Place of Birth:"),
-                                                            ],
-                                                          ),
-                                                          Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .only(
-                                                                    left: 16),
-                                                            child: Column(
-                                                              crossAxisAlignment:
-                                                                  CrossAxisAlignment
-                                                                      .start,
-                                                              children: [
-                                                                Row(
-                                                                  children: [
-                                                                    const Divider(
-                                                                      indent:
-                                                                          20,
-                                                                    ),
-                                                                    Text(
-                                                                      getBirthday(
-                                                                          data),
-                                                                    ),
-                                                                  ],
-                                                                ),
-                                                                Row(
-                                                                  children: [
-                                                                    const Divider(
-                                                                      indent:
-                                                                          20,
-                                                                    ),
-                                                                    Text(data
-                                                                        .place_of_birth
-                                                                        .toString())
-                                                                  ],
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                      const VerticalDivider(
-                                                        indent: 20,
-                                                      ),
-                                                      Row(
-                                                        children: [
-                                                          Expanded(
-                                                            child: Text(
-                                                              biography!,
-                                                              style:
-                                                                  const TextStyle(
-                                                                fontFamily:
-                                                                    "RobotoLight",
-                                                              ),
-                                                            ),
-                                                          ),
+                                                          Text(
+                                                              "Date of Birth:"),
+                                                          Text(
+                                                              "Place of Birth:"),
                                                         ],
                                                       ),
                                                       Padding(
                                                         padding:
                                                             const EdgeInsets
-                                                                .only(
-                                                                top: 100.0),
-                                                        child: Card(
-                                                          color: Colors.grey
-                                                              .withOpacity(0.2),
-                                                          child: Theme(
-                                                            data: ThemeData(
-                                                              highlightColor:
-                                                                  Colors
-                                                                      .transparent,
-                                                              hoverColor: Colors
-                                                                  .transparent,
-                                                              splashColor: Colors
-                                                                  .transparent,
-                                                            ),
-                                                            child:
-                                                                ExpansionTile(
-                                                              textColor:
-                                                                  Colors.white,
-                                                              collapsedTextColor:
-                                                                  Colors.white,
-                                                              collapsedIconColor:
-                                                                  Colors.white,
-                                                              iconColor:
-                                                                  Colors.white,
-                                                              title: const Text(
-                                                                "Cast",
-                                                                style: TextStyle(
-                                                                    fontFamily:
-                                                                        'RobotoBold'),
-                                                              ),
+                                                                .only(left: 16),
+                                                        child: Column(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .start,
+                                                          children: [
+                                                            Row(
                                                               children: [
-                                                                SizedBox(
-                                                                  child: Row(
-                                                                    children: [
-                                                                      IconButton(
-                                                                        icon:
-                                                                            const Icon(
-                                                                          Icons
-                                                                              .arrow_left,
-                                                                          color:
-                                                                              Colors.white,
-                                                                        ),
-                                                                        onPressed:
-                                                                            () {
-                                                                          pageController
-                                                                              .previousPage(
-                                                                            duration:
-                                                                                const Duration(milliseconds: 500),
-                                                                            curve:
-                                                                                Curves.ease,
-                                                                          );
-                                                                        },
-                                                                      ),
-                                                                      Expanded(
-                                                                        child:
-                                                                            SizedBox(
-                                                                          height:
-                                                                              420,
-                                                                          child:
-                                                                              ListView.builder(
-                                                                            controller:
-                                                                                pageController,
-                                                                            itemCount:
-                                                                                getCastData(data).length,
-                                                                            scrollDirection:
-                                                                                Axis.horizontal,
-                                                                            itemBuilder:
-                                                                                (context, index) {
-                                                                              List castData = getCastData(data);
-                                                                              var movieFlag = true;
-                                                                              var title = castData[index]['title'];
-
-                                                                              if (title == null) {
-                                                                                title = castData[index]['name'];
-                                                                                movieFlag = false;
-                                                                              }
-                                                                              // ignore: prefer_typing_uninitialized_variables
-                                                                              var character;
-                                                                              if (castData[index]['character'] == "") {
-                                                                                character = "Unknown";
-                                                                              } else {
-                                                                                character = castData[index]['character'];
-                                                                              }
-
-                                                                              var starPhoto = castData[index]['poster_path'];
-
-                                                                              if (starPhoto != null) {
-                                                                                starPhoto = starPhoto.substring(1);
-                                                                              }
-                                                                              return Padding(
-                                                                                padding: const EdgeInsets.all(16.0),
-                                                                                child: GestureDetector(
-                                                                                  onTap: () {
-                                                                                    if (movieFlag == true) {
-                                                                                      Navigator.push(
-                                                                                        context,
-                                                                                        MaterialPageRoute(
-                                                                                          builder: (context) => MovieDetailPage(
-                                                                                            movieID: castData[index]['id'],
-                                                                                          ),
-                                                                                        ),
-                                                                                      );
-                                                                                    } else {
-                                                                                      Navigator.push(
-                                                                                        context,
-                                                                                        MaterialPageRoute(
-                                                                                          builder: (context) => SerieDetailPage(
-                                                                                            serieID: castData[index]['id'],
-                                                                                          ),
-                                                                                        ),
-                                                                                      );
-                                                                                    }
-                                                                                  },
-                                                                                  child: Card(
-                                                                                    color: const Color.fromARGB(255, 17, 17, 17),
-                                                                                    shape: const RoundedRectangleBorder(
-                                                                                      side: BorderSide(
-                                                                                        color: Colors.transparent,
-                                                                                      ),
-                                                                                      borderRadius: BorderRadius.all(
-                                                                                        Radius.circular(12),
-                                                                                      ),
-                                                                                    ),
-                                                                                    child: Column(
-                                                                                      children: [
-                                                                                        SizedBox(
-                                                                                          height: 300,
-                                                                                          width: 243,
-                                                                                          child: ClipRRect(
-                                                                                            borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
-                                                                                            child: Image(
-                                                                                              fit: BoxFit.fill,
-                                                                                              image: NetworkImage("https://image.tmdb.org/t/p/original/$starPhoto"),
-                                                                                            ),
-                                                                                          ),
-                                                                                        ),
-                                                                                        Padding(
-                                                                                          padding: const EdgeInsets.only(top: 8.0),
-                                                                                          child: SizedBox(
-                                                                                            width: 243,
-                                                                                            child: FittedBox(
-                                                                                              fit: BoxFit.scaleDown,
-                                                                                              child: Text(
-                                                                                                title,
-                                                                                                softWrap: true,
-                                                                                                textAlign: TextAlign.center,
-                                                                                                style: const TextStyle(fontSize: 22, color: Colors.white, fontWeight: FontWeight.bold),
-                                                                                              ),
-                                                                                            ),
-                                                                                          ),
-                                                                                        ),
-                                                                                        Padding(
-                                                                                          padding: const EdgeInsets.only(top: 8.0),
-                                                                                          child: SizedBox(
-                                                                                            width: 243,
-                                                                                            child: FittedBox(
-                                                                                              fit: BoxFit.scaleDown,
-                                                                                              child: Text(
-                                                                                                character,
-                                                                                                softWrap: true,
-                                                                                                textAlign: TextAlign.center,
-                                                                                                style: const TextStyle(
-                                                                                                  fontSize: 15,
-                                                                                                  color: Colors.white,
-                                                                                                ),
-                                                                                              ),
-                                                                                            ),
-                                                                                          ),
-                                                                                        ),
-                                                                                      ],
-                                                                                    ),
-                                                                                  ),
-                                                                                ),
-                                                                              );
-                                                                            },
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                      IconButton(
-                                                                        icon:
-                                                                            const Icon(
-                                                                          Icons
-                                                                              .arrow_right,
-                                                                          color:
-                                                                              Colors.white,
-                                                                        ),
-                                                                        onPressed:
-                                                                            () {
-                                                                          pageController
-                                                                              .nextPage(
-                                                                            duration:
-                                                                                const Duration(milliseconds: 500),
-                                                                            curve:
-                                                                                Curves.ease,
-                                                                          );
-                                                                        },
-                                                                      ),
-                                                                    ],
-                                                                  ),
+                                                                const Divider(
+                                                                  indent: 20,
+                                                                ),
+                                                                Text(
+                                                                  getBirthday(
+                                                                      data),
                                                                 ),
                                                               ],
                                                             ),
-                                                          ),
+                                                            Row(
+                                                              children: [
+                                                                const Divider(
+                                                                  indent: 20,
+                                                                ),
+                                                                Text(data
+                                                                    .place_of_birth
+                                                                    .toString())
+                                                              ],
+                                                            ),
+                                                          ],
                                                         ),
                                                       ),
-                                                      Padding(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .only(top: 8.0),
-                                                        child: Card(
-                                                          color: Colors.grey
-                                                              .withOpacity(0.2),
-                                                          child: Theme(
-                                                            data: ThemeData(
-                                                              highlightColor:
-                                                                  Colors
-                                                                      .transparent,
-                                                              hoverColor: Colors
-                                                                  .transparent,
-                                                              splashColor: Colors
-                                                                  .transparent,
-                                                            ),
-                                                            child:
-                                                                ExpansionTile(
-                                                              textColor:
-                                                                  Colors.white,
-                                                              collapsedTextColor:
-                                                                  Colors.white,
-                                                              collapsedIconColor:
-                                                                  Colors.white,
-                                                              iconColor:
-                                                                  Colors.white,
-                                                              title: const Text(
-                                                                "Crew",
-                                                                style: TextStyle(
-                                                                    fontFamily:
-                                                                        'RobotoBold'),
-                                                              ),
-                                                              children: [
-                                                                SizedBox(
-                                                                  child: Row(
-                                                                    children: [
-                                                                      IconButton(
-                                                                        icon:
-                                                                            const Icon(
-                                                                          Icons
-                                                                              .arrow_left,
-                                                                          color:
-                                                                              Colors.white,
-                                                                        ),
-                                                                        onPressed:
-                                                                            () {
-                                                                          pageController2
-                                                                              .previousPage(
-                                                                            duration:
-                                                                                const Duration(milliseconds: 500),
-                                                                            curve:
-                                                                                Curves.ease,
-                                                                          );
-                                                                        },
-                                                                      ),
-                                                                      Expanded(
-                                                                        child:
-                                                                            SizedBox(
-                                                                          height:
-                                                                              420,
-                                                                          child:
-                                                                              ListView.builder(
-                                                                            controller:
-                                                                                pageController2,
-                                                                            itemCount:
-                                                                                getCrewData(data).length,
-                                                                            scrollDirection:
-                                                                                Axis.horizontal,
-                                                                            itemBuilder:
-                                                                                (context, index) {
-                                                                              List crewData = getCrewData(data);
-
-                                                                              bool movieFlag = true;
-
-                                                                              var title = crewData[index]['title'];
-
-                                                                              if (title == null) {
-                                                                                title = crewData[index]['name'];
-                                                                                movieFlag = false;
-                                                                              }
-                                                                              var starPhoto = crewData[index]['poster_path'];
-
-                                                                              var job = crewData[index]['job'];
-                                                                              job ??= " ";
-                                                                              if (starPhoto != null) {
-                                                                                starPhoto = starPhoto.substring(1);
-                                                                              }
-                                                                              return Padding(
-                                                                                padding: const EdgeInsets.all(16.0),
-                                                                                child: GestureDetector(
-                                                                                  onTap: () {
-                                                                                    if (movieFlag == true) {
-                                                                                      Navigator.push(
-                                                                                        context,
-                                                                                        MaterialPageRoute(
-                                                                                          builder: (context) => MovieDetailPage(
-                                                                                            movieID: crewData[index]['id'],
-                                                                                          ),
-                                                                                        ),
-                                                                                      );
-                                                                                    } else {
-                                                                                      Navigator.push(
-                                                                                        context,
-                                                                                        MaterialPageRoute(
-                                                                                          builder: (context) => SerieDetailPage(
-                                                                                            serieID: crewData[index]['id'],
-                                                                                          ),
-                                                                                        ),
-                                                                                      );
-                                                                                    }
-                                                                                  },
-                                                                                  child: Card(
-                                                                                    color: const Color.fromARGB(255, 17, 17, 17),
-                                                                                    shape: const RoundedRectangleBorder(
-                                                                                      side: BorderSide(
-                                                                                        color: Colors.transparent,
-                                                                                      ),
-                                                                                      borderRadius: BorderRadius.all(
-                                                                                        Radius.circular(12),
-                                                                                      ),
-                                                                                    ),
-                                                                                    child: Column(
-                                                                                      children: [
-                                                                                        SizedBox(
-                                                                                          height: 300,
-                                                                                          width: 243,
-                                                                                          child: ClipRRect(
-                                                                                            borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
-                                                                                            child: Image(
-                                                                                              fit: BoxFit.fill,
-                                                                                              image: NetworkImage("https://image.tmdb.org/t/p/original/$starPhoto"),
-                                                                                            ),
-                                                                                          ),
-                                                                                        ),
-                                                                                        Padding(
-                                                                                          padding: const EdgeInsets.only(top: 8.0),
-                                                                                          child: SizedBox(
-                                                                                            width: 243,
-                                                                                            child: FittedBox(
-                                                                                              fit: BoxFit.scaleDown,
-                                                                                              child: Text(
-                                                                                                title,
-                                                                                                softWrap: true,
-                                                                                                textAlign: TextAlign.center,
-                                                                                                style: const TextStyle(fontSize: 22, color: Colors.white, fontWeight: FontWeight.bold),
-                                                                                              ),
-                                                                                            ),
-                                                                                          ),
-                                                                                        ),
-                                                                                        Padding(
-                                                                                          padding: const EdgeInsets.only(top: 8.0),
-                                                                                          child: SizedBox(
-                                                                                            width: 243,
-                                                                                            child: FittedBox(
-                                                                                              fit: BoxFit.scaleDown,
-                                                                                              child: Text(
-                                                                                                job,
-                                                                                                softWrap: true,
-                                                                                                textAlign: TextAlign.center,
-                                                                                                style: const TextStyle(
-                                                                                                  fontSize: 15,
-                                                                                                  color: Colors.white,
-                                                                                                ),
-                                                                                              ),
-                                                                                            ),
-                                                                                          ),
-                                                                                        ),
-                                                                                      ],
-                                                                                    ),
-                                                                                  ),
-                                                                                ),
-                                                                              );
-                                                                            },
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                      IconButton(
-                                                                        icon:
-                                                                            const Icon(
-                                                                          Icons
-                                                                              .arrow_right,
-                                                                          color:
-                                                                              Colors.white,
-                                                                        ),
-                                                                        onPressed:
-                                                                            () {
-                                                                          pageController2
-                                                                              .nextPage(
-                                                                            duration:
-                                                                                const Duration(milliseconds: 500),
-                                                                            curve:
-                                                                                Curves.ease,
-                                                                          );
-                                                                        },
-                                                                      ),
-                                                                    ],
-                                                                  ),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      Padding(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .only(top: 8),
-                                                        child: Card(
-                                                          color: Colors.grey
-                                                              .withOpacity(0.2),
-                                                          child: Theme(
-                                                            data: ThemeData(
-                                                              highlightColor:
-                                                                  Colors
-                                                                      .transparent,
-                                                              hoverColor: Colors
-                                                                  .transparent,
-                                                              splashColor: Colors
-                                                                  .transparent,
-                                                            ),
-                                                            child:
-                                                                ExpansionTile(
-                                                              textColor:
-                                                                  Colors.white,
-                                                              collapsedTextColor:
-                                                                  Colors.white,
-                                                              collapsedIconColor:
-                                                                  Colors.white,
-                                                              iconColor:
-                                                                  Colors.white,
-                                                              title: const Text(
-                                                                "Images",
-                                                                style: TextStyle(
-                                                                    fontFamily:
-                                                                        'RobotoBold'),
-                                                              ),
-                                                              children: [
-                                                                SizedBox(
-                                                                  child: Row(
-                                                                    children: [
-                                                                      IconButton(
-                                                                        icon:
-                                                                            const Icon(
-                                                                          Icons
-                                                                              .arrow_left,
-                                                                          color:
-                                                                              Colors.white,
-                                                                        ),
-                                                                        onPressed:
-                                                                            () {
-                                                                          pageController3
-                                                                              .previousPage(
-                                                                            duration:
-                                                                                const Duration(milliseconds: 500),
-                                                                            curve:
-                                                                                Curves.ease,
-                                                                          );
-                                                                        },
-                                                                      ),
-                                                                      Expanded(
-                                                                        child:
-                                                                            SizedBox(
-                                                                          height:
-                                                                              450,
-                                                                          width:
-                                                                              300,
-                                                                          child:
-                                                                              ListView.builder(
-                                                                            controller:
-                                                                                pageController3,
-                                                                            itemCount:
-                                                                                data.images?.length,
-                                                                            scrollDirection:
-                                                                                Axis.horizontal,
-                                                                            itemBuilder:
-                                                                                (context, index) {
-                                                                              if (data.images == []) {
-                                                                                return const Center(
-                                                                                  child: Text("Nothing Here"),
-                                                                                );
-                                                                              } else {
-                                                                                var filePath = data.images![index]['file_path'];
-                                                                                return Padding(
-                                                                                  padding: const EdgeInsets.all(16.0),
-                                                                                  child: ClipRRect(
-                                                                                    borderRadius: const BorderRadius.all(Radius.circular(12)),
-                                                                                    child: Image(
-                                                                                      fit: BoxFit.fill,
-                                                                                      image: NetworkImage("https://image.tmdb.org/t/p/original/${filePath?.substring(1)}"),
-                                                                                    ),
-                                                                                  ),
-                                                                                );
-                                                                              }
-                                                                            },
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                      IconButton(
-                                                                        icon:
-                                                                            const Icon(
-                                                                          Icons
-                                                                              .arrow_right,
-                                                                          color:
-                                                                              Colors.white,
-                                                                        ),
-                                                                        onPressed:
-                                                                            () {
-                                                                          pageController3
-                                                                              .nextPage(
-                                                                            duration:
-                                                                                const Duration(milliseconds: 500),
-                                                                            curve:
-                                                                                Curves.ease,
-                                                                          );
-                                                                        },
-                                                                      ),
-                                                                    ],
-                                                                  ),
-                                                                ),
-                                                              ],
-                                                            ),
+                                                    ],
+                                                  ),
+                                                  const VerticalDivider(
+                                                    indent: 20,
+                                                  ),
+                                                  Row(
+                                                    children: [
+                                                      Expanded(
+                                                        child: Text(
+                                                          biography!,
+                                                          style:
+                                                              const TextStyle(
+                                                            fontFamily:
+                                                                "RobotoLight",
                                                           ),
                                                         ),
                                                       ),
                                                     ],
                                                   ),
-                                                ),
-                                              ),
-                                            ),
-                                            TableCell(
-                                              child: Container(
-                                                height: 350,
-                                                color: Colors.transparent,
-                                                child: const Card(
-                                                  elevation: 0,
-                                                  color: Colors.transparent,
-                                                  child: SizedBox(
-                                                      // mainAxisAlignment:
-                                                      //     MainAxisAlignment.center,
-                                                      // crossAxisAlignment:
-                                                      //     CrossAxisAlignment.center,
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            top: 100.0),
+                                                    child: Card(
+                                                      color: Colors.grey
+                                                          .withValues(
+                                                              alpha: 0.2),
+                                                      child: Theme(
+                                                        data: ThemeData(
+                                                          highlightColor: Colors
+                                                              .transparent,
+                                                          hoverColor: Colors
+                                                              .transparent,
+                                                          splashColor: Colors
+                                                              .transparent,
+                                                        ),
+                                                        child: ExpansionTile(
+                                                          textColor:
+                                                              Colors.white,
+                                                          collapsedTextColor:
+                                                              Colors.white,
+                                                          collapsedIconColor:
+                                                              Colors.white,
+                                                          iconColor:
+                                                              Colors.white,
+                                                          title: const Text(
+                                                            "Cast",
+                                                            style: TextStyle(
+                                                                fontFamily:
+                                                                    'RobotoBold'),
+                                                          ),
+                                                          children: [
+                                                            SizedBox(
+                                                              child: Row(
+                                                                children: [
+                                                                  IconButton(
+                                                                    icon:
+                                                                        const Icon(
+                                                                      Icons
+                                                                          .arrow_left,
+                                                                      color: Colors
+                                                                          .white,
+                                                                    ),
+                                                                    onPressed:
+                                                                        () {
+                                                                      pageController
+                                                                          .previousPage(
+                                                                        duration:
+                                                                            const Duration(milliseconds: 500),
+                                                                        curve: Curves
+                                                                            .ease,
+                                                                      );
+                                                                    },
+                                                                  ),
+                                                                  Expanded(
+                                                                    child:
+                                                                        SizedBox(
+                                                                      height:
+                                                                          420,
+                                                                      child: ListView
+                                                                          .builder(
+                                                                        controller:
+                                                                            pageController,
+                                                                        itemCount:
+                                                                            getCastData(data).length,
+                                                                        scrollDirection:
+                                                                            Axis.horizontal,
+                                                                        itemBuilder:
+                                                                            (context,
+                                                                                index) {
+                                                                          List
+                                                                              castData =
+                                                                              getCastData(data);
+                                                                          var movieFlag =
+                                                                              true;
+                                                                          var title =
+                                                                              castData[index]['title'];
+
+                                                                          if (title ==
+                                                                              null) {
+                                                                            title =
+                                                                                castData[index]['name'];
+                                                                            movieFlag =
+                                                                                false;
+                                                                          }
+                                                                          // ignore: prefer_typing_uninitialized_variables
+                                                                          var character;
+                                                                          if (castData[index]['character'] ==
+                                                                              "") {
+                                                                            character =
+                                                                                "Unknown";
+                                                                          } else {
+                                                                            character =
+                                                                                castData[index]['character'];
+                                                                          }
+
+                                                                          var starPhoto =
+                                                                              castData[index]['poster_path'];
+
+                                                                          if (starPhoto !=
+                                                                              null) {
+                                                                            starPhoto =
+                                                                                starPhoto.substring(1);
+                                                                          }
+                                                                          return Padding(
+                                                                            padding:
+                                                                                const EdgeInsets.all(16.0),
+                                                                            child:
+                                                                                GestureDetector(
+                                                                              onTap: () {
+                                                                                if (movieFlag == true) {
+                                                                                  Navigator.push(
+                                                                                    context,
+                                                                                    MaterialPageRoute(
+                                                                                      builder: (context) => MovieDetailPage(
+                                                                                        movieID: castData[index]['id'],
+                                                                                      ),
+                                                                                    ),
+                                                                                  );
+                                                                                } else {
+                                                                                  Navigator.push(
+                                                                                    context,
+                                                                                    MaterialPageRoute(
+                                                                                      builder: (context) => SerieDetailPage(
+                                                                                        serieID: castData[index]['id'],
+                                                                                      ),
+                                                                                    ),
+                                                                                  );
+                                                                                }
+                                                                              },
+                                                                              child: Card(
+                                                                                color: const Color.fromARGB(255, 17, 17, 17),
+                                                                                shape: const RoundedRectangleBorder(
+                                                                                  side: BorderSide(
+                                                                                    color: Colors.transparent,
+                                                                                  ),
+                                                                                  borderRadius: BorderRadius.all(
+                                                                                    Radius.circular(12),
+                                                                                  ),
+                                                                                ),
+                                                                                child: Column(
+                                                                                  children: [
+                                                                                    SizedBox(
+                                                                                      height: 300,
+                                                                                      width: 243,
+                                                                                      child: ClipRRect(
+                                                                                        borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
+                                                                                        child: Image(
+                                                                                          fit: BoxFit.fill,
+                                                                                          image: NetworkImage("https://image.tmdb.org/t/p/original/$starPhoto"),
+                                                                                        ),
+                                                                                      ),
+                                                                                    ),
+                                                                                    Padding(
+                                                                                      padding: const EdgeInsets.only(top: 8.0),
+                                                                                      child: SizedBox(
+                                                                                        width: 243,
+                                                                                        child: FittedBox(
+                                                                                          fit: BoxFit.scaleDown,
+                                                                                          child: Text(
+                                                                                            title,
+                                                                                            softWrap: true,
+                                                                                            textAlign: TextAlign.center,
+                                                                                            style: const TextStyle(fontSize: 22, color: Colors.white, fontWeight: FontWeight.bold),
+                                                                                          ),
+                                                                                        ),
+                                                                                      ),
+                                                                                    ),
+                                                                                    Padding(
+                                                                                      padding: const EdgeInsets.only(top: 8.0),
+                                                                                      child: SizedBox(
+                                                                                        width: 243,
+                                                                                        child: FittedBox(
+                                                                                          fit: BoxFit.scaleDown,
+                                                                                          child: Text(
+                                                                                            character,
+                                                                                            softWrap: true,
+                                                                                            textAlign: TextAlign.center,
+                                                                                            style: const TextStyle(
+                                                                                              fontSize: 15,
+                                                                                              color: Colors.white,
+                                                                                            ),
+                                                                                          ),
+                                                                                        ),
+                                                                                      ),
+                                                                                    ),
+                                                                                  ],
+                                                                                ),
+                                                                              ),
+                                                                            ),
+                                                                          );
+                                                                        },
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                  IconButton(
+                                                                    icon:
+                                                                        const Icon(
+                                                                      Icons
+                                                                          .arrow_right,
+                                                                      color: Colors
+                                                                          .white,
+                                                                    ),
+                                                                    onPressed:
+                                                                        () {
+                                                                      pageController
+                                                                          .nextPage(
+                                                                        duration:
+                                                                            const Duration(milliseconds: 500),
+                                                                        curve: Curves
+                                                                            .ease,
+                                                                      );
+                                                                    },
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
                                                       ),
-                                                ),
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            top: 8.0),
+                                                    child: Card(
+                                                      color: Colors.grey
+                                                          .withValues(
+                                                              alpha: 0.2),
+                                                      child: Theme(
+                                                        data: ThemeData(
+                                                          highlightColor: Colors
+                                                              .transparent,
+                                                          hoverColor: Colors
+                                                              .transparent,
+                                                          splashColor: Colors
+                                                              .transparent,
+                                                        ),
+                                                        child: ExpansionTile(
+                                                          textColor:
+                                                              Colors.white,
+                                                          collapsedTextColor:
+                                                              Colors.white,
+                                                          collapsedIconColor:
+                                                              Colors.white,
+                                                          iconColor:
+                                                              Colors.white,
+                                                          title: const Text(
+                                                            "Crew",
+                                                            style: TextStyle(
+                                                                fontFamily:
+                                                                    'RobotoBold'),
+                                                          ),
+                                                          children: [
+                                                            SizedBox(
+                                                              child: Row(
+                                                                children: [
+                                                                  IconButton(
+                                                                    icon:
+                                                                        const Icon(
+                                                                      Icons
+                                                                          .arrow_left,
+                                                                      color: Colors
+                                                                          .white,
+                                                                    ),
+                                                                    onPressed:
+                                                                        () {
+                                                                      pageController2
+                                                                          .previousPage(
+                                                                        duration:
+                                                                            const Duration(milliseconds: 500),
+                                                                        curve: Curves
+                                                                            .ease,
+                                                                      );
+                                                                    },
+                                                                  ),
+                                                                  Expanded(
+                                                                    child:
+                                                                        SizedBox(
+                                                                      height:
+                                                                          420,
+                                                                      child: ListView
+                                                                          .builder(
+                                                                        controller:
+                                                                            pageController2,
+                                                                        itemCount:
+                                                                            getCrewData(data).length,
+                                                                        scrollDirection:
+                                                                            Axis.horizontal,
+                                                                        itemBuilder:
+                                                                            (context,
+                                                                                index) {
+                                                                          List
+                                                                              crewData =
+                                                                              getCrewData(data);
+
+                                                                          bool
+                                                                              movieFlag =
+                                                                              true;
+
+                                                                          var title =
+                                                                              crewData[index]['title'];
+
+                                                                          if (title ==
+                                                                              null) {
+                                                                            title =
+                                                                                crewData[index]['name'];
+                                                                            movieFlag =
+                                                                                false;
+                                                                          }
+                                                                          var starPhoto =
+                                                                              crewData[index]['poster_path'];
+
+                                                                          var job =
+                                                                              crewData[index]['job'];
+                                                                          job ??=
+                                                                              " ";
+                                                                          if (starPhoto !=
+                                                                              null) {
+                                                                            starPhoto =
+                                                                                starPhoto.substring(1);
+                                                                          }
+                                                                          return Padding(
+                                                                            padding:
+                                                                                const EdgeInsets.all(16.0),
+                                                                            child:
+                                                                                GestureDetector(
+                                                                              onTap: () {
+                                                                                if (movieFlag == true) {
+                                                                                  Navigator.push(
+                                                                                    context,
+                                                                                    MaterialPageRoute(
+                                                                                      builder: (context) => MovieDetailPage(
+                                                                                        movieID: crewData[index]['id'],
+                                                                                      ),
+                                                                                    ),
+                                                                                  );
+                                                                                } else {
+                                                                                  Navigator.push(
+                                                                                    context,
+                                                                                    MaterialPageRoute(
+                                                                                      builder: (context) => SerieDetailPage(
+                                                                                        serieID: crewData[index]['id'],
+                                                                                      ),
+                                                                                    ),
+                                                                                  );
+                                                                                }
+                                                                              },
+                                                                              child: Card(
+                                                                                color: const Color.fromARGB(255, 17, 17, 17),
+                                                                                shape: const RoundedRectangleBorder(
+                                                                                  side: BorderSide(
+                                                                                    color: Colors.transparent,
+                                                                                  ),
+                                                                                  borderRadius: BorderRadius.all(
+                                                                                    Radius.circular(12),
+                                                                                  ),
+                                                                                ),
+                                                                                child: Column(
+                                                                                  children: [
+                                                                                    SizedBox(
+                                                                                      height: 300,
+                                                                                      width: 243,
+                                                                                      child: ClipRRect(
+                                                                                        borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
+                                                                                        child: Image(
+                                                                                          fit: BoxFit.fill,
+                                                                                          image: NetworkImage("https://image.tmdb.org/t/p/original/$starPhoto"),
+                                                                                        ),
+                                                                                      ),
+                                                                                    ),
+                                                                                    Padding(
+                                                                                      padding: const EdgeInsets.only(top: 8.0),
+                                                                                      child: SizedBox(
+                                                                                        width: 243,
+                                                                                        child: FittedBox(
+                                                                                          fit: BoxFit.scaleDown,
+                                                                                          child: Text(
+                                                                                            title,
+                                                                                            softWrap: true,
+                                                                                            textAlign: TextAlign.center,
+                                                                                            style: const TextStyle(fontSize: 22, color: Colors.white, fontWeight: FontWeight.bold),
+                                                                                          ),
+                                                                                        ),
+                                                                                      ),
+                                                                                    ),
+                                                                                    Padding(
+                                                                                      padding: const EdgeInsets.only(top: 8.0),
+                                                                                      child: SizedBox(
+                                                                                        width: 243,
+                                                                                        child: FittedBox(
+                                                                                          fit: BoxFit.scaleDown,
+                                                                                          child: Text(
+                                                                                            job,
+                                                                                            softWrap: true,
+                                                                                            textAlign: TextAlign.center,
+                                                                                            style: const TextStyle(
+                                                                                              fontSize: 15,
+                                                                                              color: Colors.white,
+                                                                                            ),
+                                                                                          ),
+                                                                                        ),
+                                                                                      ),
+                                                                                    ),
+                                                                                  ],
+                                                                                ),
+                                                                              ),
+                                                                            ),
+                                                                          );
+                                                                        },
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                  IconButton(
+                                                                    icon:
+                                                                        const Icon(
+                                                                      Icons
+                                                                          .arrow_right,
+                                                                      color: Colors
+                                                                          .white,
+                                                                    ),
+                                                                    onPressed:
+                                                                        () {
+                                                                      pageController2
+                                                                          .nextPage(
+                                                                        duration:
+                                                                            const Duration(milliseconds: 500),
+                                                                        curve: Curves
+                                                                            .ease,
+                                                                      );
+                                                                    },
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            top: 8),
+                                                    child: Card(
+                                                      color: Colors.grey
+                                                          .withValues(
+                                                              alpha: 0.2),
+                                                      child: Theme(
+                                                        data: ThemeData(
+                                                          highlightColor: Colors
+                                                              .transparent,
+                                                          hoverColor: Colors
+                                                              .transparent,
+                                                          splashColor: Colors
+                                                              .transparent,
+                                                        ),
+                                                        child: ExpansionTile(
+                                                          textColor:
+                                                              Colors.white,
+                                                          collapsedTextColor:
+                                                              Colors.white,
+                                                          collapsedIconColor:
+                                                              Colors.white,
+                                                          iconColor:
+                                                              Colors.white,
+                                                          title: const Text(
+                                                            "Images",
+                                                            style: TextStyle(
+                                                                fontFamily:
+                                                                    'RobotoBold'),
+                                                          ),
+                                                          children: [
+                                                            SizedBox(
+                                                              child: Row(
+                                                                children: [
+                                                                  IconButton(
+                                                                    icon:
+                                                                        const Icon(
+                                                                      Icons
+                                                                          .arrow_left,
+                                                                      color: Colors
+                                                                          .white,
+                                                                    ),
+                                                                    onPressed:
+                                                                        () {
+                                                                      pageController3
+                                                                          .previousPage(
+                                                                        duration:
+                                                                            const Duration(milliseconds: 500),
+                                                                        curve: Curves
+                                                                            .ease,
+                                                                      );
+                                                                    },
+                                                                  ),
+                                                                  Expanded(
+                                                                    child:
+                                                                        SizedBox(
+                                                                      height:
+                                                                          450,
+                                                                      width:
+                                                                          300,
+                                                                      child: ListView
+                                                                          .builder(
+                                                                        controller:
+                                                                            pageController3,
+                                                                        itemCount: data
+                                                                            .images
+                                                                            ?.length,
+                                                                        scrollDirection:
+                                                                            Axis.horizontal,
+                                                                        itemBuilder:
+                                                                            (context,
+                                                                                index) {
+                                                                          if (data.images ==
+                                                                              []) {
+                                                                            return const Center(
+                                                                              child: Text("Nothing Here"),
+                                                                            );
+                                                                          } else {
+                                                                            var filePath =
+                                                                                data.images![index]['file_path'];
+                                                                            return Padding(
+                                                                              padding: const EdgeInsets.all(16.0),
+                                                                              child: ClipRRect(
+                                                                                borderRadius: const BorderRadius.all(Radius.circular(12)),
+                                                                                child: Image(
+                                                                                  fit: BoxFit.fill,
+                                                                                  image: NetworkImage("https://image.tmdb.org/t/p/original/${filePath?.substring(1)}"),
+                                                                                ),
+                                                                              ),
+                                                                            );
+                                                                          }
+                                                                        },
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                  IconButton(
+                                                                    icon:
+                                                                        const Icon(
+                                                                      Icons
+                                                                          .arrow_right,
+                                                                      color: Colors
+                                                                          .white,
+                                                                    ),
+                                                                    onPressed:
+                                                                        () {
+                                                                      pageController3
+                                                                          .nextPage(
+                                                                        duration:
+                                                                            const Duration(milliseconds: 500),
+                                                                        curve: Curves
+                                                                            .ease,
+                                                                      );
+                                                                    },
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ),
-                                          ],
+                                          ),
+                                        ),
+                                        TableCell(
+                                          child: Container(
+                                            height: 350,
+                                            color: Colors.transparent,
+                                            child: const Card(
+                                              elevation: 0,
+                                              color: Colors.transparent,
+                                              child: SizedBox(
+                                                  // mainAxisAlignment:
+                                                  //     MainAxisAlignment.center,
+                                                  // crossAxisAlignment:
+                                                  //     CrossAxisAlignment.center,
+                                                  ),
+                                            ),
+                                          ),
                                         ),
                                       ],
-                                      columnWidths: const {
-                                        0: FlexColumnWidth(0.5),
-                                        1: FlexColumnWidth(2),
-                                        2: FlexColumnWidth(0.5),
-                                      },
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                  columnWidths: const {
+                                    0: FlexColumnWidth(0.5),
+                                    1: FlexColumnWidth(2),
+                                    2: FlexColumnWidth(0.5),
+                                  },
+                                ),
                               ),
-                            ),
+                            ],
                           ),
                         ),
                       ),
-                    );
-                  } else {
-                    return const CustomCPI();
-                  }
-                });
+                    ),
+                  ),
+                );
+              },
+            );
           } else {
             bool connectionBool = true;
             if (snapshot.connectionState == ConnectionState.done) {

@@ -1,7 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:gnml/Data/Model/game_model.dart';
+import 'package:hive/hive.dart';
+import 'package:vault/Data/Model/game_model.dart';
 import 'package:http/http.dart' as http;
 
 class GamePageLogic {
@@ -31,6 +32,17 @@ class GamePageLogic {
   }
 
   Future<List<GameModel>> getGameDetails(int id) async {
+    // Check Hive Cache First
+    var box = Hive.box('content_cache');
+    var cacheKey = 'game_details_$id';
+
+    if (box.containsKey(cacheKey)) {
+      var cachedData = box.get(cacheKey);
+      if (cachedData is GameModel) {
+        return [cachedData];
+      }
+    }
+
     var body = {
       "getDetails":
           """fields id, age_ratings.*, aggregated_rating, artworks.*, category, cover.*, first_release_date, game_engines.*, genres.*,name, platforms.*, player_perspectives.*, rating, release_dates.*,screenshots.*,storyline,summary,tags,themes.*,videos.*,websites.*,language_supports.language.*,language_supports.language_support_type.*, cover.url,cover.image_id,hypes,involved_companies.*,involved_companies.company.*;
@@ -41,6 +53,8 @@ where id = $id;"""
       for (Map<String, dynamic> x in value) {
         GameModel gameModel = GameModel.fromJson(x);
         gameModelList.add(gameModel);
+        // Save to Hive Cache
+        box.put(cacheKey, gameModel);
       }
     });
 

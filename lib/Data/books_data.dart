@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:gnml/Data/Model/book_model.dart';
-import 'package:gnml/Logic/bookspage_logic.dart';
+import 'package:vault/Data/Model/book_model.dart';
+import 'package:vault/Logic/bookspage_logic.dart';
 
 class BooksData {
   Future<List<dynamic>> searchBooks(String query, int page) async {

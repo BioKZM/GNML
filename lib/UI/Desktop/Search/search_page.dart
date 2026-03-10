@@ -1,15 +1,18 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
-import 'package:gnml/Helper/theme_helper.dart';
-import 'package:gnml/Data/firebase_user_data.dart';
-import 'package:gnml/UI/Desktop/Search/search_actors/ui/search_actors_builder.dart';
-import 'package:gnml/UI/Desktop/Search/search_books/ui/search_books_builder.dart';
-import 'package:gnml/UI/Desktop/Search/search_games/ui/search_games_builder.dart';
-import 'package:gnml/UI/Desktop/Search/search_movies/ui/search_movies_builder.dart';
-import 'package:gnml/UI/Desktop/Search/search_series/ui/search_series_builder.dart';
-import 'package:gnml/Widgets/circularprogressindicator.dart';
+import 'package:vault/Helper/theme_helper.dart';
+import 'package:vault/Logic/actorpage_logic.dart';
+import 'package:vault/Logic/bookspage_logic.dart';
+import 'package:vault/Logic/gamepage_logic.dart';
+import 'package:vault/Logic/moviepage_logic.dart';
+import 'package:vault/Logic/seriespage_logic.dart';
+import 'package:vault/UI/Desktop/Details/actors_detail_page.dart';
+import 'package:vault/UI/Desktop/Details/books_detail_page.dart';
+import 'package:vault/UI/Desktop/Details/game_detail_page.dart';
+import 'package:vault/UI/Desktop/Details/movie_detail_page.dart';
+import 'package:vault/UI/Desktop/Details/serie_detail_page.dart';
+import 'package:vault/Widgets/content_builder.dart';
+import 'package:vault/Widgets/generic_content_card.dart';
 import 'package:provider/provider.dart';
 
 enum Buttons { games, movies, series, actors, books }
@@ -22,47 +25,10 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchPageState extends State<SearchPage> {
-  User? user = FirebaseAuth.instance.currentUser;
-  bool boolean = false;
   Buttons buttonView = Buttons.games;
   TextEditingController searchController = TextEditingController();
-  late PageController searchGamesController;
   String searchText = "";
-  int pageIndexMovies = 1;
-  int pageIndexSeries = 1;
-  int pageIndexActors = 1;
-
-  @override
-  void initState() {
-    super.initState();
-    searchGamesController = PageController(
-      initialPage: 0,
-    );
-  }
-
-  Future<void> updateData(
-    List games,
-    List movies,
-    List series,
-    List books,
-    List actors,
-  ) async {
-    CollectionReference collectionReference =
-        FirebaseFirestore.instance.collection('brews');
-    DocumentReference documentReference =
-        collectionReference.doc('${user?.email}');
-    Map<String, dynamic> updatedData = {
-      "library": {
-        "games": games,
-        "movies": movies,
-        "series": series,
-        "books": books,
-        "actors": actors,
-      }
-    };
-
-    await documentReference.update(updatedData);
-  }
+  int _page = 1;
 
   @override
   Widget build(BuildContext context) {
@@ -76,42 +42,38 @@ class _SearchPageState extends State<SearchPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(right: 16, left: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: SegmentedButton<Buttons>(
                     showSelectedIcon: false,
-                    segments: const <ButtonSegment<Buttons>>[
-                      ButtonSegment<Buttons>(
-                        value: Buttons.games,
-                        label: Text("Games"),
-                        icon: Icon(FluentIcons.games_24_filled),
-                      ),
-                      ButtonSegment<Buttons>(
-                        value: Buttons.movies,
-                        label: Text("Movies"),
-                        icon: Icon(FluentIcons.movies_and_tv_24_filled),
-                      ),
-                      ButtonSegment<Buttons>(
-                        value: Buttons.series,
-                        label: Text("Series"),
-                        icon: Icon(FluentIcons.video_clip_24_filled),
-                      ),
-                      ButtonSegment<Buttons>(
-                        value: Buttons.actors,
-                        label: Text("Actors"),
-                        icon: Icon(FluentIcons.person_24_filled),
-                      ),
-                      ButtonSegment<Buttons>(
-                        value: Buttons.books,
-                        label: Text("Books"),
-                        icon: Icon(FluentIcons.book_24_filled),
-                      ),
+                    segments: const [
+                      ButtonSegment(
+                          value: Buttons.games,
+                          label: Text("Oyunlar"),
+                          icon: Icon(FluentIcons.games_24_filled)),
+                      ButtonSegment(
+                          value: Buttons.movies,
+                          label: Text("Filmler"),
+                          icon: Icon(FluentIcons.movies_and_tv_24_filled)),
+                      ButtonSegment(
+                          value: Buttons.series,
+                          label: Text("Diziler"),
+                          icon: Icon(FluentIcons.video_clip_24_filled)),
+                      ButtonSegment(
+                          value: Buttons.actors,
+                          label: Text("Oyuncular"),
+                          icon: Icon(FluentIcons.person_24_filled)),
+                      ButtonSegment(
+                          value: Buttons.books,
+                          label: Text("Kitaplar"),
+                          icon: Icon(FluentIcons.book_24_filled)),
                     ],
-                    selected: <Buttons>{buttonView},
-                    onSelectionChanged: (Set<Buttons> newSelection) {
+                    selected: {buttonView},
+                    onSelectionChanged: (newSelection) {
                       setState(() {
                         buttonView = newSelection.first;
                         searchText = "";
                         searchController.clear();
+                        _page = 1;
                       });
                     },
                   ),
@@ -125,18 +87,15 @@ class _SearchPageState extends State<SearchPage> {
                       child: TextField(
                         controller: searchController,
                         decoration: InputDecoration(
-                          labelText: 'Search',
-                          hintText: '',
+                          labelText: 'Ara',
                           prefixIcon: const Icon(Icons.search),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
+                              borderRadius: BorderRadius.circular(8)),
                         ),
-                        onSubmitted: (value) {
-                          setState(() {
-                            searchText = value;
-                          });
-                        },
+                        onSubmitted: (value) => setState(() {
+                          searchText = value;
+                          _page = 1;
+                        }),
                       ),
                     ),
                   ),
@@ -147,101 +106,11 @@ class _SearchPageState extends State<SearchPage> {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(top: 16),
-              child: SizedBox(
-                width: double.infinity,
-                child: Card(
-                  elevation: 5,
-                  child: FutureBuilder(
-                      future: FirebaseUserData(user: user).getData(),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.done) {
-                          Map<String, dynamic> list =
-                              snapshot.data!.data() as Map<String, dynamic>;
-                          List gamesList = list['library']['games'];
-                          List moviesList = list['library']['movies'];
-                          List seriesList = list['library']['series'];
-                          List booksList = list['library']['books'];
-                          List actorsList = list['library']['actors'];
-                          Map<String, dynamic> favoritesList =
-                              list['favorites'];
-
-                          return StatefulBuilder(builder: (context, snapshot) {
-                            ValueNotifier<int> pageIndex =
-                                ValueNotifier<int>(1);
-                            if (buttonView == Buttons.games) {
-                              return searchGamesBuilder(
-                                user,
-                                gamesList,
-                                themeColor,
-                                moviesList,
-                                seriesList,
-                                booksList,
-                                actorsList,
-                                pageIndex,
-                                searchGamesController,
-                                searchText,
-                                favoritesList,
-                              );
-                            } else if (buttonView == Buttons.movies) {
-                              return searchMoviesBuilder(
-                                user,
-                                moviesList,
-                                themeColor,
-                                gamesList,
-                                seriesList,
-                                booksList,
-                                actorsList,
-                                pageIndexMovies,
-                                searchText,
-                                favoritesList,
-                              );
-                            } else if (buttonView == Buttons.series) {
-                              return searchSeriesBuilder(
-                                user,
-                                seriesList,
-                                themeColor,
-                                gamesList,
-                                moviesList,
-                                booksList,
-                                actorsList,
-                                pageIndexSeries,
-                                searchText,
-                                favoritesList,
-                              );
-                            } else if (buttonView == Buttons.actors) {
-                              return searchActorsBuilder(
-                                user,
-                                actorsList,
-                                themeColor,
-                                gamesList,
-                                moviesList,
-                                seriesList,
-                                booksList,
-                                pageIndexActors,
-                                searchText,
-                                favoritesList,
-                              );
-                            } else if (buttonView == Buttons.books) {
-                              return searchBooksBuilder(
-                                user,
-                                booksList,
-                                themeColor,
-                                gamesList,
-                                moviesList,
-                                seriesList,
-                                actorsList,
-                                favoritesList,
-                                searchText,
-                              );
-                            } else {
-                              return const Center();
-                            }
-                          });
-                        } else {
-                          return const CustomCPI();
-                        }
-                      }),
-                ),
+              child: Card(
+                elevation: 5,
+                child: searchText.isEmpty
+                    ? const Center(child: Text("Search for something..."))
+                    : _buildSearchResults(themeColor),
               ),
             ),
           ),
@@ -249,9 +118,68 @@ class _SearchPageState extends State<SearchPage> {
       ),
     );
   }
+
+  Widget _buildSearchResults(int themeColor) {
+    Future<List<dynamic>> future;
+    ContentType type;
+    Widget Function(dynamic) detailPageBuilder;
+
+    switch (buttonView) {
+      case Buttons.games:
+        future = GamePageLogic().searchGames(searchText);
+        type = ContentType.games;
+        detailPageBuilder = (item) => GameDetailPage(gameID: item.id);
+        break;
+      case Buttons.movies:
+        future = MoviePageLogic().searchMovies(searchText, _page);
+        type = ContentType.movies;
+        detailPageBuilder = (item) => MovieDetailPage(movieID: item.id);
+        break;
+      case Buttons.series:
+        future = SeriesPageLogic().searchSeries(searchText, _page);
+        type = ContentType.series;
+        detailPageBuilder = (item) => SerieDetailPage(serieID: item.id);
+        break;
+      case Buttons.actors:
+        future = ActorPageLogic().searchActors(searchText, _page);
+        type = ContentType.actors;
+        detailPageBuilder = (item) => ActorDetailPage(actorID: item.id);
+        break;
+      case Buttons.books:
+        future = BooksPageLogic().searchBooks(searchText);
+        type = ContentType.books;
+        detailPageBuilder = (item) => BooksDetailPage(bookID: item.id);
+        break;
+    }
+
+    return ContentBuilder(
+      future: future,
+      onRetry: () => setState(() {}),
+      builder: (context, data) {
+        if (data.isEmpty) return const Center(child: Text("No results found"));
+        return GridView.builder(
+          padding: const EdgeInsets.all(16),
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 200,
+            childAspectRatio: 0.7,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+          ),
+          itemCount: data.length,
+          itemBuilder: (context, index) {
+            final item = data[index];
+            return GenericContentCard(
+              item: item,
+              type: type,
+              themeColor: themeColor,
+              detailPage: detailPageBuilder(item),
+            );
+          },
+        );
+      },
+    );
+  }
 }
-
-
 
 // Future<List<GameModel>> searchGames(String searchText) async {
 //   return await GamePageLogic().searchGames(searchText);

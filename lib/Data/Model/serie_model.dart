@@ -1,23 +1,54 @@
-class SerieModel {
+// ignore_for_file: non_constant_identifier_names
+import 'package:hive/hive.dart';
+import 'package:vault/Data/Model/base_content_model.dart';
+
+part 'serie_model.g.dart';
+
+@HiveType(typeId: 2)
+class SerieModel implements BaseContentModel {
+  @override
+  @HiveField(0)
+  String? get title => name;
+  @override
+  @HiveField(1)
   int? id;
+  @HiveField(2)
   String? overview;
+  @override
+  @HiveField(3)
   String? imageURL;
+  @HiveField(4)
   String? first_air_date;
+  @HiveField(5)
   String? name;
+  @HiveField(6)
   double? vote_average;
+  @HiveField(7)
   List<dynamic>? created_by;
+  @HiveField(8)
   List<dynamic>? genres;
+  @HiveField(9)
   String? homepage;
+  @HiveField(10)
   int? number_of_episodes;
+  @HiveField(11)
   int? number_of_seasons;
+  @HiveField(12)
   List<dynamic>? production_companies;
+  @HiveField(13)
   String? status;
+  @HiveField(14)
   String? tagline;
+  @HiveField(15)
   List<dynamic>? seasons;
+  @HiveField(16)
   Map<String, dynamic>? credits;
+  @HiveField(17)
   List<dynamic>? images;
+  @HiveField(18)
   String? type;
   // List<dynamic>? genres;
+  @HiveField(19)
   dynamic providers;
 
   SerieModel({
@@ -67,10 +98,10 @@ class SerieModel {
 }
 
 String getImageURL(json) {
-  var image_url = json['poster_path'];
+  var imageUrl = json['poster_path'];
 
-  image_url = "https://image.tmdb.org/t/p/original/${image_url?.substring(1)}";
-  return image_url;
+  imageUrl = "https://image.tmdb.org/t/p/original/${imageUrl?.substring(1)}";
+  return imageUrl;
 }
 
 List<dynamic> getImages(json) {

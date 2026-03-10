@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gnml/Logic/seriespage_logic.dart';
+import 'package:vault/Logic/seriespage_logic.dart';
 
 class SeriesData {
   Future<List<dynamic>> searchSeries(String query, int page) async {

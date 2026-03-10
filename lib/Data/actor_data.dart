@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gnml/Logic/actorpage_logic.dart';
+import 'package:vault/Logic/actorpage_logic.dart';
 
 class ActorsData {
   Future<List<dynamic>> searchActors(String query, int page) async {

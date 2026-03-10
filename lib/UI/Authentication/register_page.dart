@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:gnml/Helper/auth.dart';
-import 'package:gnml/UI/homepage.dart';
-import 'package:gnml/Widgets/circularprogressindicator.dart';
+import 'package:vault/Helper/auth.dart';
+import 'package:vault/UI/layout_scaffold.dart';
+import 'package:vault/Widgets/circularprogressindicator.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -121,11 +121,11 @@ class _RegisterPageState extends State<RegisterPage> {
                                   error = "Please input a valid email adress");
                               isLoading = false;
                             } else {
-                              // ignore: use_build_context_synchronously
+                              if (!context.mounted) return;
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const HomePage(),
+                                  builder: (context) => LayoutScaffold(),
                                 ),
                               );
                             }

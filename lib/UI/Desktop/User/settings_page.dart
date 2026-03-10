@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hsvcolor_picker/flutter_hsvcolor_picker.dart';
-import 'package:gnml/Helper/theme_helper.dart';
-import 'package:gnml/Widgets/circularprogressindicator.dart';
-import 'package:gnml/Widgets/custom_app_window.dart';
+import 'package:vault/Helper/theme_helper.dart';
+import 'package:vault/Widgets/circularprogressindicator.dart';
+import 'package:vault/Widgets/custom_app_window.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -199,7 +199,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               onPressed: () {
                                 Provider.of<ThemeProvider>(context,
                                         listen: false)
-                                    .setColor(colorPicker.value);
+                                    .setColor(colorPicker.toARGB32());
                               },
                             )
                           ],
@@ -241,14 +241,14 @@ class _SettingsPageState extends State<SettingsPage> {
 
 Future setColor(color) async {
   final SharedPreferences prefs = await SharedPreferences.getInstance();
-  prefs.setInt("themeColor", color.value);
+  prefs.setInt("themeColor", color.toARGB32());
 }
 
 Future<int?> getColor() async {
   final SharedPreferences prefs = await SharedPreferences.getInstance();
   var color = prefs.getInt("themeColor");
   if (color == null) {
-    return const Color.fromARGB(255, 180, 0, 0).value;
+    return const Color.fromARGB(255, 180, 0, 0).toARGB32();
   } else {
     return color;
   }

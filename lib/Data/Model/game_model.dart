@@ -1,34 +1,80 @@
-class GameModel {
+// ignore_for_file: non_constant_identifier_names
+import 'package:hive/hive.dart';
+import 'package:vault/Data/Model/base_content_model.dart';
+
+part 'game_model.g.dart';
+
+@HiveType(typeId: 0)
+class GameModel implements BaseContentModel {
+  @override
+  @HiveField(0)
+  String? get title => name;
+  @override
+  @HiveField(1)
+  String? get imageURL => url != null ? "https://$url" : null;
+
+  @override
+  @HiveField(2)
   int? id;
+  @HiveField(3)
   List<dynamic>? age_ratings;
+  @HiveField(4)
   int? aggregated_rating;
+  @HiveField(5)
   List<dynamic>? artworks;
+  @HiveField(6)
   int? category;
-  var cover;
+  @HiveField(7)
+  dynamic cover;
+  @HiveField(8)
   int? first_release_date;
+  @HiveField(9)
   List<dynamic>? game_engines;
+  @HiveField(10)
   List<dynamic>? genres;
+  @HiveField(11)
   List<dynamic>? keywords;
+  @HiveField(12)
   List<dynamic>? multiplayer_modes;
+  @HiveField(13)
   String? name;
+  @HiveField(14)
   List<dynamic>? platforms;
+  @HiveField(15)
   List<dynamic>? player_perspectives;
+  @HiveField(16)
   int? rating;
+  @HiveField(17)
   List<dynamic>? release_dates;
+  @HiveField(18)
   List<dynamic>? screenshots;
+  @HiveField(19)
   String? storyline;
+  @HiveField(20)
   String? summary;
+  @HiveField(21)
   List<dynamic>? tags;
+  @HiveField(22)
   List<dynamic>? themes;
+  @HiveField(23)
   List<dynamic>? videos;
+  @HiveField(24)
   List<dynamic>? websites;
+  @HiveField(25)
   List<dynamic>? language;
+  @HiveField(26)
   List<dynamic>? language_support_type;
+  @HiveField(27)
   Map<dynamic, dynamic>? language_support;
+  @HiveField(28)
   String? url;
+  @HiveField(29)
   String? image_id;
+  @HiveField(30)
   int? hypes;
+  @HiveField(31)
   List<dynamic>? involved_companies;
+  @HiveField(32)
   List<dynamic>? screenshots_list;
 
   GameModel({
@@ -99,17 +145,17 @@ class GameModel {
 }
 
 dynamic getFirstReleaseDate(json) {
-  var first_release_date;
+  dynamic firstReleaseDate;
   if (json['first_release_date'] == null) {
-    first_release_date = 0;
+    firstReleaseDate = 0;
   } else {
-    first_release_date = json['first_release_date'];
+    firstReleaseDate = json['first_release_date'];
   }
-  return first_release_date;
+  return firstReleaseDate;
 }
 
 dynamic getCoverURL(json, cover) {
-  var url;
+  dynamic url;
   if (cover == null) {
     url = "images.igdb.com/igdb/image/upload/t_720p/null.png";
   } else {
@@ -132,13 +178,13 @@ List<dynamic> getScreenshotIDList(json) {
 }
 
 dynamic getImageID(json, cover) {
-  var image_id;
+  dynamic imageId;
   if (cover == null) {
-    image_id = "0";
+    imageId = "0";
   } else {
-    image_id = cover['image_id'];
+    imageId = cover['image_id'];
   }
-  return image_id;
+  return imageId;
 }
 
 dynamic getLanguageSupport(json) {

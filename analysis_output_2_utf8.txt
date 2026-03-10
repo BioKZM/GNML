@@ -1,0 +1,16 @@
+﻿Analyzing GNML...                                               
+
+   info - The member 'imageURL' overrides an inherited member but isn't annotated with '@override' - lib\Data\Model\actor_model.dart:15:11 - annotate_overrides
+   info - An uninitialized field should have an explicit type annotation - lib\Data\Model\game_model.dart:16:7 - prefer_typing_uninitialized_variables
+   info - An uninitialized variable should have an explicit type annotation - lib\Data\Model\game_model.dart:111:7 - prefer_typing_uninitialized_variables
+   info - An uninitialized variable should have an explicit type annotation - lib\Data\Model\game_model.dart:121:7 - prefer_typing_uninitialized_variables
+   info - An uninitialized variable should have an explicit type annotation - lib\Data\Model\game_model.dart:144:7 - prefer_typing_uninitialized_variables
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\Helper\theme_helper.dart:6:58 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\Helper\theme_helper.dart:31:46 - deprecated_member_use
+   info - Don't use 'BuildContext's across async gaps - lib\UI\Authentication\login_page.dart:91:35 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\UI\Authentication\register_page.dart:126:33 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\UI\Desktop\User\profile_page.dart:333:53 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\UI\Desktop\User\profile_page.dart:362:53 - use_build_context_synchronously
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\UI\Desktop\User\settings_page.dart:202:59 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\UI\Desktop\User\settings_page.dart:251:49 - deprecated_member_use
+

@@ -1,19 +1,19 @@
-import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:gnml/Data/Model/game_model.dart';
-import 'package:gnml/Helper/theme_helper.dart';
-import 'package:gnml/Logic/gamepage_logic.dart';
-import 'package:gnml/Widgets/circularprogressindicator.dart';
-import 'package:gnml/Widgets/custom_app_window.dart';
+import 'package:skeletonizer/skeletonizer.dart';
+import 'package:vault/Data/Model/game_model.dart';
+import 'package:vault/Helper/rating_helper.dart';
+import 'package:vault/Helper/theme_helper.dart';
+import 'package:vault/Logic/gamepage_logic.dart';
+import 'package:vault/Widgets/custom_app_window.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:vault/Providers/library_provider.dart';
+import 'package:vault/Helper/content_type.dart';
 
 class GameDetailPage extends StatefulWidget {
   final int gameID;
@@ -28,8 +28,8 @@ class GameDetailPage extends StatefulWidget {
 }
 
 class _GameDetailPageState extends State<GameDetailPage> {
-  User? user = FirebaseAuth.instance.currentUser;
-  bool isLiked = false;
+  // User? user = FirebaseAuth.instance.currentUser; // Removed as part of cleanup
+  // bool isLiked = false; // Managed by Provider
   bool isFavorited = false;
   String? connectionText;
   @override
@@ -40,40 +40,7 @@ class _GameDetailPageState extends State<GameDetailPage> {
   @override
   Widget build(BuildContext context) {
     int themeColor = Provider.of<ThemeProvider>(context).color;
-    Future<DocumentSnapshot> getData() async {
-      CollectionReference collectionReference =
-          FirebaseFirestore.instance.collection('brews');
-
-      DocumentReference documentReference =
-          collectionReference.doc('${user!.email}');
-
-      DocumentSnapshot documentSnapshot = await documentReference.get();
-
-      return documentSnapshot;
-    }
-
-    Future<void> updateData(
-        List games, List movies, List series, List books, List actors) async {
-      CollectionReference collectionReference =
-          FirebaseFirestore.instance.collection('brews');
-      DocumentReference documentReference =
-          collectionReference.doc('${user!.email}');
-      Map<String, dynamic> updatedData = {
-        "library": {
-          "games": games,
-          "movies": movies,
-          "series": series,
-          "books": books,
-          "actors": actors,
-        }
-      };
-
-      await documentReference.update(updatedData);
-    }
-
-    PageController pageController = PageController(
-      initialPage: 0,
-    );
+    // Removed getData and updateData functions
     return FutureBuilder<List<GameModel>>(
         future: GamePageLogic().getGameDetails(widget.gameID),
         builder: (context, snapshot) {
@@ -101,618 +68,452 @@ class _GameDetailPageState extends State<GameDetailPage> {
             if (imageId == "0") {
               imageId = null;
             }
-            return FutureBuilder(
-                future: getData(),
-                builder: (context, AsyncSnapshot<DocumentSnapshot> snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done) {
-                    Map<String, dynamic> list =
-                        snapshot.data!.data() as Map<String, dynamic>;
-                    List gamesList = list['library']['games'];
-                    List moviesList = list['library']['movies'];
-                    List seriesList = list['library']['series'];
-                    List booksList = list['library']['books'];
-                    List actorsList = list['library']['actors'];
-                    // Map<String, dynamic> favoritesList = list['favorites'];
-                    Map<String, dynamic> gameMap = {
-                      "gameID": widget.gameID,
-                      "imageURL":
-                          "https://images.igdb.com/igdb/image/upload/t_original/$imageId.png",
-                      "gameName": data.name,
-                    };
-                    for (var x in gamesList) {
-                      if (x['gameID'] == widget.gameID) {
-                        isLiked = true;
-                      }
-                    }
 
-                    return Scaffold(
-                      body: Container(
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: NetworkImage(
-                                "https://images.igdb.com/igdb/image/upload/t_original/$imageId.png"),
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        child: Container(
-                          height: double.maxFinite,
-                          color: Colors.black.withOpacity(0.7),
-                          child: SingleChildScrollView(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            child: BackdropFilter(
-                              filter:
-                                  ImageFilter.blur(sigmaX: 100, sigmaY: 100),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                crossAxisAlignment: CrossAxisAlignment.start,
+            // Simplified FutureBuilder replacement with Consumer
+            return Consumer<LibraryProvider>(
+                builder: (context, libraryProvider, child) {
+              bool isLiked =
+                  libraryProvider.isInLibrary(ContentType.games, widget.gameID);
+
+              return Scaffold(
+                body: Container(
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: NetworkImage(
+                          "https://images.igdb.com/igdb/image/upload/t_original/$imageId.png"),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  child: Container(
+                    height: double.maxFinite,
+                    color: Colors.black.withValues(alpha: 0.7),
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 100, sigmaY: 100),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(
+                              height: 45,
+                              width: MediaQuery.of(context).size.width,
+                              child: CustomAppWindow(isExitable: true),
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.fromLTRB(64, 96, 64, 48),
+                              child: Table(
                                 children: [
-                                  SizedBox(
-                                    height: 45,
-                                    width: MediaQuery.of(context).size.width,
-                                    child: CustomAppWindow(isExitable: true),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                        64, 96, 64, 48),
-                                    child: Table(
-                                      children: [
-                                        TableRow(
+                                  TableRow(
+                                    children: [
+                                      TableCell(
+                                        child: Column(
                                           children: [
-                                            TableCell(
-                                              child: Column(
-                                                children: [
-                                                  Card(
-                                                    elevation: 0,
-                                                    child: SizedBox(
-                                                      height: 350,
-                                                      child: ClipRRect(
-                                                        borderRadius:
-                                                            const BorderRadius
-                                                                .all(
-                                                                Radius.circular(
-                                                                    12)),
-                                                        child: Image(
-                                                            image: NetworkImage(
-                                                                "https://images.igdb.com/igdb/image/upload/t_original/$imageId.png"),
-                                                            fit: BoxFit.fill),
+                                            Card(
+                                              elevation: 0,
+                                              child: SizedBox(
+                                                height: 350,
+                                                child: ClipRRect(
+                                                  borderRadius:
+                                                      const BorderRadius.all(
+                                                          Radius.circular(12)),
+                                                  child: Image(
+                                                      image: NetworkImage(
+                                                          "https://images.igdb.com/igdb/image/upload/t_original/$imageId.png"),
+                                                      fit: BoxFit.fill),
+                                                ),
+                                              ),
+                                            ),
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                  right: 16.0),
+                                              child: StatefulBuilder(
+                                                  builder: (context, setState) {
+                                                return Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: [
+                                                    Card(
+                                                      color: Colors.grey
+                                                          .withValues(
+                                                              alpha: 0.3),
+                                                      child: IconButton(
+                                                        highlightColor:
+                                                            Color(themeColor),
+                                                        hoverColor:
+                                                            Colors.transparent,
+                                                        icon: isLiked
+                                                            ? Tooltip(
+                                                                message:
+                                                                    "Remove from Library",
+                                                                child: Icon(
+                                                                    Icons
+                                                                        .favorite,
+                                                                    color: Color(
+                                                                        themeColor)),
+                                                              )
+                                                            : const Tooltip(
+                                                                message:
+                                                                    "Add to Library",
+                                                                child: Icon(Icons
+                                                                    .favorite_outline),
+                                                              ),
+                                                        onPressed: () {
+                                                          if (isLiked) {
+                                                            libraryProvider
+                                                                .removeFromLibrary(
+                                                              ContentType.games,
+                                                              widget.gameID,
+                                                            );
+                                                          } else {
+                                                            libraryProvider
+                                                                .addOrUpdateItem(
+                                                              type: ContentType
+                                                                  .games,
+                                                              id: widget.gameID,
+                                                              title: data.name,
+                                                              imageUrl:
+                                                                  "https://images.igdb.com/igdb/image/upload/t_original/$imageId.png",
+                                                              extra: {
+                                                                "id": widget
+                                                                    .gameID,
+                                                                "type": "game",
+                                                                "title":
+                                                                    data.name,
+                                                                "imageURL":
+                                                                    "https://images.igdb.com/igdb/image/upload/t_original/$imageId.png",
+                                                                "folder":
+                                                                    "library",
+                                                              },
+                                                            );
+                                                          }
+                                                          // setState handled by Consumer
+                                                        },
+                                                      ),
+                                                    ),
+                                                    getIcons(data),
+                                                  ],
+                                                );
+                                              }),
+                                            )
+                                          ],
+                                        ),
+                                      ),
+                                      TableCell(
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 64),
+                                          child: SizedBox(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text('${data.name}',
+                                                    style: const TextStyle(
+                                                        fontSize: 50,
+                                                        fontFamily:
+                                                            'RobotoBold')),
+                                                Text(dateTime,
+                                                    style: TextStyle(
+                                                        color: Colors
+                                                            .grey.shade400)),
+                                                const Divider(
+                                                    color: Colors.transparent),
+                                                const Divider(
+                                                    color: Colors.transparent),
+                                                Text(
+                                                  summary!,
+                                                  style: const TextStyle(
+                                                    fontFamily: "RobotoMedium",
+                                                  ),
+                                                ),
+                                                const Divider(
+                                                    color: Colors.transparent),
+                                                const Divider(
+                                                    color: Colors.transparent),
+                                                Row(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    const Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Text(
+                                                          "Genres:",
+                                                          style: TextStyle(
+                                                            fontFamily:
+                                                                "RobotoLight",
+                                                          ),
+                                                        ),
+                                                        Text(
+                                                          "Tags:",
+                                                          style: TextStyle(
+                                                            fontFamily:
+                                                                "RobotoLight",
+                                                          ),
+                                                        ),
+                                                        Text(
+                                                          "Developers:",
+                                                          style: TextStyle(
+                                                            fontFamily:
+                                                                "RobotoLight",
+                                                          ),
+                                                        ),
+                                                        Text(
+                                                          "Publishers:",
+                                                          style: TextStyle(
+                                                            fontFamily:
+                                                                "RobotoLight",
+                                                          ),
+                                                        ),
+                                                        Text(
+                                                          "Platforms:",
+                                                          style: TextStyle(
+                                                            fontFamily:
+                                                                "RobotoLight",
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    Padding(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                              left: 16),
+                                                      child: Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          SizedBox(
+                                                            width: MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width /
+                                                                2.4,
+                                                            child: Wrap(
+                                                              spacing: 10,
+                                                              children:
+                                                                  genreList,
+                                                            ),
+                                                          ),
+                                                          SizedBox(
+                                                            width: MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width /
+                                                                2.4,
+                                                            child: Wrap(
+                                                              spacing: 10,
+                                                              children:
+                                                                  tagsList,
+                                                            ),
+                                                          ),
+                                                          SizedBox(
+                                                            width: MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width /
+                                                                2.4,
+                                                            child: Wrap(
+                                                              spacing: 10,
+                                                              children: devList,
+                                                            ),
+                                                          ),
+                                                          SizedBox(
+                                                            width: MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width /
+                                                                2.4,
+                                                            child: Wrap(
+                                                              spacing: 10,
+                                                              children:
+                                                                  publisherList,
+                                                            ),
+                                                          ),
+                                                          SizedBox(
+                                                            width: MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width /
+                                                                2.4,
+                                                            child: Wrap(
+                                                              spacing: 10,
+                                                              children:
+                                                                  platformList,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          top: 100),
+                                                  child: Card(
+                                                    color: Colors.grey
+                                                        .withValues(alpha: 0.2),
+                                                    child: Theme(
+                                                      data: ThemeData(
+                                                        highlightColor:
+                                                            Colors.transparent,
+                                                        hoverColor:
+                                                            Colors.transparent,
+                                                        splashColor:
+                                                            Colors.transparent,
+                                                      ),
+                                                      child: ExpansionTile(
+                                                        textColor: Colors.white,
+                                                        collapsedTextColor:
+                                                            Colors.white,
+                                                        collapsedIconColor:
+                                                            Colors.white,
+                                                        iconColor: Colors.white,
+                                                        title: const Text(
+                                                          "Storyline (May contain spoilers)",
+                                                          style: TextStyle(
+                                                              fontFamily:
+                                                                  'RobotoBold'),
+                                                        ),
+                                                        children: [
+                                                          Padding(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .all(24.0),
+                                                            child: Text(
+                                                              storyline!,
+                                                              style:
+                                                                  const TextStyle(
+                                                                fontFamily:
+                                                                    "RobotoLight",
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
                                                       ),
                                                     ),
                                                   ),
-                                                  Padding(
-                                                    padding:
-                                                        const EdgeInsets.only(
-                                                            right: 16.0),
-                                                    child: StatefulBuilder(
-                                                        builder: (context,
-                                                            setState) {
-                                                      return Row(
-                                                        mainAxisAlignment:
-                                                            MainAxisAlignment
-                                                                .center,
-                                                        children: [
-                                                          Card(
-                                                            color: Colors.grey
-                                                                .withOpacity(
-                                                                    0.3),
-                                                            child: IconButton(
-                                                              highlightColor:
-                                                                  Color(
-                                                                      themeColor),
-                                                              hoverColor: Colors
-                                                                  .transparent,
-                                                              icon: isLiked
-                                                                  ? Tooltip(
-                                                                      message:
-                                                                          "Remove from Library",
-                                                                      child: Icon(
-                                                                          Icons
-                                                                              .favorite,
-                                                                          color:
-                                                                              Color(themeColor)),
-                                                                    )
-                                                                  : const Tooltip(
-                                                                      message:
-                                                                          "Add to Library",
-                                                                      child: Icon(
-                                                                          Icons
-                                                                              .favorite_outline),
-                                                                    ),
-                                                              onPressed: () {
-                                                                if (isLiked) {
-                                                                  gamesList.removeWhere((element) =>
-                                                                      element[
-                                                                          'gameID'] ==
-                                                                      widget
-                                                                          .gameID);
-                                                                  updateData(
-                                                                      gamesList,
-                                                                      moviesList,
-                                                                      seriesList,
-                                                                      booksList,
-                                                                      actorsList);
-                                                                } else {
-                                                                  gamesList.add(
-                                                                      gameMap);
-                                                                  updateData(
-                                                                      gamesList,
-                                                                      moviesList,
-                                                                      seriesList,
-                                                                      booksList,
-                                                                      actorsList);
-                                                                }
-                                                                setState(() =>
-                                                                    isLiked =
-                                                                        !isLiked);
-                                                              },
-                                                            ),
-                                                          ),
-                                                          getIcons(data),
-                                                        ],
-                                                      );
-                                                    }),
-                                                  )
-                                                ],
-                                              ),
-                                            ),
-                                            TableCell(
-                                              child: Padding(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        horizontal: 64),
-                                                child: SizedBox(
+                                                ),
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          top: 16),
                                                   child: Column(
                                                     crossAxisAlignment:
                                                         CrossAxisAlignment
                                                             .start,
                                                     children: [
-                                                      Text('${data.name}',
-                                                          style: const TextStyle(
-                                                              fontSize: 50,
-                                                              fontFamily:
-                                                                  'RobotoBold')),
-                                                      Text(dateTime,
-                                                          style: TextStyle(
-                                                              color: Colors.grey
-                                                                  .shade400)),
-                                                      const Divider(
-                                                          color: Colors
-                                                              .transparent),
-                                                      const Divider(
-                                                          color: Colors
-                                                              .transparent),
-                                                      Text(
-                                                        summary!,
-                                                        style: const TextStyle(
-                                                          fontFamily:
-                                                              "RobotoMedium",
-                                                        ),
+                                                      const Padding(
+                                                        padding: EdgeInsets
+                                                            .symmetric(
+                                                                vertical: 16.0),
+                                                        child: Text(
+                                                            "Screenshots",
+                                                            style: TextStyle(
+                                                                fontFamily:
+                                                                    'RobotoBold',
+                                                                fontSize: 24)),
                                                       ),
-                                                      const Divider(
-                                                          color: Colors
-                                                              .transparent),
-                                                      const Divider(
-                                                          color: Colors
-                                                              .transparent),
-                                                      Row(
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .start,
-                                                        children: [
-                                                          const Column(
-                                                            crossAxisAlignment:
-                                                                CrossAxisAlignment
-                                                                    .start,
-                                                            children: [
-                                                              Text(
-                                                                "Genres:",
-                                                                style:
-                                                                    TextStyle(
-                                                                  fontFamily:
-                                                                      "RobotoLight",
+                                                      SizedBox(
+                                                        height: 250,
+                                                        child: ListView.builder(
+                                                          scrollDirection:
+                                                              Axis.horizontal,
+                                                          itemCount: data
+                                                                  .screenshots_list
+                                                                  ?.length ??
+                                                              0,
+                                                          itemBuilder:
+                                                              (context, index) {
+                                                            var imageId =
+                                                                data.screenshots_list![
+                                                                    index];
+                                                            return Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .only(
+                                                                      right:
+                                                                          16.0),
+                                                              child: ClipRRect(
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            12),
+                                                                child: Image
+                                                                    .network(
+                                                                  "https://images.igdb.com/igdb/image/upload/t_screenshot_med/$imageId.png",
+                                                                  fit: BoxFit
+                                                                      .cover,
                                                                 ),
                                                               ),
-                                                              Text(
-                                                                "Tags:",
-                                                                style:
-                                                                    TextStyle(
-                                                                  fontFamily:
-                                                                      "RobotoLight",
-                                                                ),
-                                                              ),
-                                                              Text(
-                                                                "Developers:",
-                                                                style:
-                                                                    TextStyle(
-                                                                  fontFamily:
-                                                                      "RobotoLight",
-                                                                ),
-                                                              ),
-                                                              Text(
-                                                                "Publishers:",
-                                                                style:
-                                                                    TextStyle(
-                                                                  fontFamily:
-                                                                      "RobotoLight",
-                                                                ),
-                                                              ),
-                                                              Text(
-                                                                "Platforms:",
-                                                                style:
-                                                                    TextStyle(
-                                                                  fontFamily:
-                                                                      "RobotoLight",
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .only(
-                                                                    left: 16),
-                                                            child: Column(
-                                                              crossAxisAlignment:
-                                                                  CrossAxisAlignment
-                                                                      .start,
-                                                              children: [
-                                                                SizedBox(
-                                                                  width: MediaQuery.of(
-                                                                              context)
-                                                                          .size
-                                                                          .width /
-                                                                      2.4,
-                                                                  child: Wrap(
-                                                                    spacing: 10,
-                                                                    children:
-                                                                        genreList,
-                                                                  ),
-                                                                ),
-                                                                SizedBox(
-                                                                  width: MediaQuery.of(
-                                                                              context)
-                                                                          .size
-                                                                          .width /
-                                                                      2.4,
-                                                                  child: Wrap(
-                                                                    spacing: 10,
-                                                                    children:
-                                                                        tagsList,
-                                                                  ),
-                                                                ),
-                                                                SizedBox(
-                                                                  width: MediaQuery.of(
-                                                                              context)
-                                                                          .size
-                                                                          .width /
-                                                                      2.4,
-                                                                  child: Wrap(
-                                                                    spacing: 10,
-                                                                    children:
-                                                                        devList,
-                                                                  ),
-                                                                ),
-                                                                SizedBox(
-                                                                  width: MediaQuery.of(
-                                                                              context)
-                                                                          .size
-                                                                          .width /
-                                                                      2.4,
-                                                                  child: Wrap(
-                                                                    spacing: 10,
-                                                                    children:
-                                                                        publisherList,
-                                                                  ),
-                                                                ),
-                                                                SizedBox(
-                                                                  width: MediaQuery.of(
-                                                                              context)
-                                                                          .size
-                                                                          .width /
-                                                                      2.4,
-                                                                  child: Wrap(
-                                                                    spacing: 10,
-                                                                    children:
-                                                                        platformList,
-                                                                  ),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                      Padding(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .only(top: 100),
-                                                        child: Card(
-                                                          color: Colors.grey
-                                                              .withOpacity(0.2),
-                                                          child: Theme(
-                                                            data: ThemeData(
-                                                              highlightColor:
-                                                                  Colors
-                                                                      .transparent,
-                                                              hoverColor: Colors
-                                                                  .transparent,
-                                                              splashColor: Colors
-                                                                  .transparent,
-                                                            ),
-                                                            child:
-                                                                ExpansionTile(
-                                                              textColor:
-                                                                  Colors.white,
-                                                              collapsedTextColor:
-                                                                  Colors.white,
-                                                              collapsedIconColor:
-                                                                  Colors.white,
-                                                              iconColor:
-                                                                  Colors.white,
-                                                              title: const Text(
-                                                                "Storyline (May contain spoilers)",
-                                                                style: TextStyle(
-                                                                    fontFamily:
-                                                                        'RobotoBold'),
-                                                              ),
-                                                              children: [
-                                                                Padding(
-                                                                  padding:
-                                                                      const EdgeInsets
-                                                                          .all(
-                                                                          24.0),
-                                                                  child: Text(
-                                                                    storyline!,
-                                                                    style:
-                                                                        const TextStyle(
-                                                                      fontFamily:
-                                                                          "RobotoLight",
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      Padding(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .only(top: 16),
-                                                        child: Card(
-                                                          color: Colors.grey
-                                                              .withOpacity(0.2),
-                                                          child: Theme(
-                                                            data: ThemeData(
-                                                              highlightColor:
-                                                                  Colors
-                                                                      .transparent,
-                                                              hoverColor: Colors
-                                                                  .transparent,
-                                                              splashColor: Colors
-                                                                  .transparent,
-                                                            ),
-                                                            child:
-                                                                ExpansionTile(
-                                                              textColor:
-                                                                  Colors.white,
-                                                              collapsedTextColor:
-                                                                  Colors.white,
-                                                              collapsedIconColor:
-                                                                  Colors.white,
-                                                              iconColor:
-                                                                  Colors.white,
-                                                              title: const Text(
-                                                                  "Screenshots",
-                                                                  style: TextStyle(
-                                                                      fontFamily:
-                                                                          'RobotoBold')),
-                                                              children: [
-                                                                SizedBox(
-                                                                  child: Row(
-                                                                    children: [
-                                                                      IconButton(
-                                                                        icon:
-                                                                            const Icon(
-                                                                          Icons
-                                                                              .arrow_left,
-                                                                          color:
-                                                                              Colors.white,
-                                                                        ),
-                                                                        onPressed:
-                                                                            () {
-                                                                          pageController
-                                                                              .previousPage(
-                                                                            duration:
-                                                                                const Duration(milliseconds: 500),
-                                                                            curve:
-                                                                                Curves.ease,
-                                                                          );
-                                                                        },
-                                                                      ),
-                                                                      Expanded(
-                                                                        child:
-                                                                            SizedBox(
-                                                                          height:
-                                                                              500,
-                                                                          width:
-                                                                              800,
-                                                                          child:
-                                                                              PageView.builder(
-                                                                            controller:
-                                                                                pageController,
-                                                                            itemCount:
-                                                                                data.screenshots_list?.length,
-                                                                            scrollDirection:
-                                                                                Axis.horizontal,
-                                                                            itemBuilder:
-                                                                                (context, index) {
-                                                                              var imageId = data.screenshots_list![index];
-                                                                              return Padding(
-                                                                                padding: const EdgeInsets.all(16.0),
-                                                                                child: ClipRRect(
-                                                                                  borderRadius: const BorderRadius.all(Radius.circular(12)),
-                                                                                  child: Image(
-                                                                                    fit: BoxFit.fill,
-                                                                                    image: NetworkImage("https://images.igdb.com/igdb/image/upload/t_original/$imageId.png"),
-                                                                                  ),
-                                                                                ),
-                                                                              );
-                                                                            },
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                      IconButton(
-                                                                        icon:
-                                                                            const Icon(
-                                                                          Icons
-                                                                              .arrow_right,
-                                                                          color:
-                                                                              Colors.white,
-                                                                        ),
-                                                                        onPressed:
-                                                                            () {
-                                                                          pageController
-                                                                              .nextPage(
-                                                                            duration:
-                                                                                const Duration(milliseconds: 500),
-                                                                            curve:
-                                                                                Curves.ease,
-                                                                          );
-                                                                        },
-                                                                      ),
-                                                                    ],
-                                                                  ),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      Padding(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .only(top: 16),
-                                                        child: Card(
-                                                          color: Colors.grey
-                                                              .withOpacity(0.2),
-                                                          child: Theme(
-                                                            data: ThemeData(
-                                                              highlightColor:
-                                                                  Colors
-                                                                      .transparent,
-                                                              hoverColor: Colors
-                                                                  .transparent,
-                                                              splashColor: Colors
-                                                                  .transparent,
-                                                            ),
-                                                            child:
-                                                                ExpansionTile(
-                                                              textColor:
-                                                                  Colors.white,
-                                                              collapsedTextColor:
-                                                                  Colors.white,
-                                                              collapsedIconColor:
-                                                                  Colors.white,
-                                                              iconColor:
-                                                                  Colors.white,
-                                                              title: const Text(
-                                                                "Language Support",
-                                                                style: TextStyle(
-                                                                    fontFamily:
-                                                                        'RobotoBold'),
-                                                              ),
-                                                              children: [
-                                                                getLanguageTable(
-                                                                    data),
-                                                              ],
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      Padding(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .only(top: 16),
-                                                        child: Card(
-                                                          color: Colors.grey
-                                                              .withOpacity(0.2),
-                                                          child: Theme(
-                                                            data: ThemeData(
-                                                              highlightColor:
-                                                                  Colors
-                                                                      .transparent,
-                                                              hoverColor: Colors
-                                                                  .transparent,
-                                                              splashColor: Colors
-                                                                  .transparent,
-                                                            ),
-                                                            child:
-                                                                ExpansionTile(
-                                                              textColor:
-                                                                  Colors.white,
-                                                              collapsedTextColor:
-                                                                  Colors.white,
-                                                              collapsedIconColor:
-                                                                  Colors.white,
-                                                              iconColor:
-                                                                  Colors.white,
-                                                              title: const Text(
-                                                                "Websites",
-                                                                style: TextStyle(
-                                                                    fontFamily:
-                                                                        'RobotoBold'),
-                                                              ),
-                                                              children: [
-                                                                getWebsitesList(
-                                                                    data),
-                                                              ],
-                                                            ),
-                                                          ),
+                                                            );
+                                                          },
                                                         ),
                                                       ),
                                                     ],
                                                   ),
                                                 ),
-                                              ),
+                                              ],
                                             ),
-                                            TableCell(
-                                              child: Container(
-                                                height: 350,
-                                                color: Colors.transparent,
-                                                child: Card(
-                                                  color: Colors.transparent,
-                                                  child: Column(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .center,
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .center,
-                                                    children: [getRating(data)],
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ],
+                                          ),
                                         ),
-                                      ],
-                                      columnWidths: const {
-                                        0: FlexColumnWidth(0.5),
-                                        1: FlexColumnWidth(2),
-                                        2: FlexColumnWidth(0.5),
-                                      },
-                                    ),
+                                      ),
+                                      TableCell(
+                                        child: Container(
+                                          color: Colors.transparent,
+                                          child: Card(
+                                            color: Colors.transparent,
+                                            child: Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.start,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.center,
+                                              children: [
+                                                RatingHelper.getRating(data),
+                                                const SizedBox(height: 32),
+                                                const Text("Language Support",
+                                                    style: TextStyle(
+                                                        fontFamily:
+                                                            'RobotoBold',
+                                                        fontSize: 20)),
+                                                const SizedBox(height: 16),
+                                                getLanguageTable(data),
+                                                const SizedBox(height: 32),
+                                                const Text("Websites",
+                                                    style: TextStyle(
+                                                        fontFamily:
+                                                            'RobotoBold',
+                                                        fontSize: 20)),
+                                                const SizedBox(height: 16),
+                                                getWebsitesList(data),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
+                                columnWidths: const {
+                                  0: FlexColumnWidth(0.5),
+                                  1: FlexColumnWidth(2),
+                                  2: FlexColumnWidth(0.5),
+                                },
                               ),
                             ),
-                          ),
+                          ],
                         ),
                       ),
-                    );
-                  } else {
-                    return const CustomCPI();
-                  }
-                });
+                    ),
+                  ),
+                ),
+              );
+            });
           } else {
             bool connectionBool = true;
             if (snapshot.connectionState == ConnectionState.done) {
@@ -724,7 +525,30 @@ class _GameDetailPageState extends State<GameDetailPage> {
               ),
               body: Center(
                   child: connectionBool
-                      ? const CustomCPI()
+                      ? Skeletonizer(
+                          enabled: true,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  height: 220,
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.06),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                const Text('Loading title'),
+                                const SizedBox(height: 8),
+                                const Text('Loading subtitle'),
+                              ],
+                            ),
+                          ),
+                        )
                       : Card(
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
@@ -1236,178 +1060,64 @@ Widget getLanguageTable(data) {
 
 Widget getWebsitesList(data) {
   List<Widget> webSitesList = [];
-  Column webSitesColumn = const Column();
   if (data.websites != null) {
     for (var x in data.websites) {
+      String url = x['url'];
+      if (url.contains("wikipedia")) continue;
+
+      String label = "Website";
+      IconData icon = Icons.link;
+
+      if (url.contains("facebook")) {
+        label = "Facebook";
+        icon = Icons.facebook;
+      } else if (url.contains("twitter") || url.contains("x.com")) {
+        label = "Twitter";
+        icon = Icons.alternate_email;
+      } else if (url.contains("instagram")) {
+        label = "Instagram";
+        icon = Icons.camera_alt;
+      } else if (url.contains("twitch")) {
+        label = "Twitch";
+        icon = Icons.videogame_asset;
+      } else if (url.contains("reddit")) {
+        label = "Reddit";
+        icon = Icons.forum;
+      } else if (url.contains("discord")) {
+        label = "Discord";
+        icon = Icons.chat;
+      } else {
+        try {
+          var uri = Uri.parse(url);
+          label = uri.host.replaceFirst("www.", "");
+          if (label.isEmpty) label = "Link";
+        } catch (e) {
+          label = "Link";
+        }
+      }
+
       webSitesList.add(
-        InkWell(
-          onTap: () {
-            launchUrl(
-              Uri.parse(x['url']),
-            );
-          },
-          child: Text(
-            "${x['url']}",
-            style: const TextStyle(color: Colors.lightBlue),
+        Padding(
+          padding: const EdgeInsets.only(right: 8.0, bottom: 8.0),
+          child: ActionChip(
+            avatar: Icon(icon, size: 16, color: Colors.white70),
+            label: Text(label, style: const TextStyle(color: Colors.white)),
+            backgroundColor: Colors.white.withValues(alpha: 0.1),
+            side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+            onPressed: () {
+              launchUrl(
+                Uri.parse(url),
+              );
+            },
           ),
         ),
-      );
-      webSitesList.add(const Divider());
-      webSitesColumn = Column(
-        children: webSitesList,
       );
     }
   }
 
-  return webSitesColumn;
-}
-
-Widget getRating(data) {
-  var metaRating = data.aggregated_rating;
-  var userRating = data.rating;
-  Color metaRatingColor = Colors.transparent;
-  Color userRatingColor = Colors.transparent;
-  String metaRatingText = "";
-  String userRatingText = "";
-  if (metaRating == null) {
-    metaRatingColor = Colors.grey;
-    metaRatingText = "N/A";
-    metaRating = 0;
-  } else if (metaRating < 20) {
-    metaRatingColor = Colors.red;
-    metaRatingText = "Bad";
-  } else if (metaRating >= 20 && metaRating < 50) {
-    metaRatingColor = Colors.orange;
-    metaRatingText = "Unlikely";
-  } else if (metaRating >= 50 && metaRating < 75) {
-    metaRatingColor = Colors.yellow;
-    metaRatingText = "Average";
-  } else if (metaRating >= 75 && metaRating < 90) {
-    metaRatingColor = Colors.lightGreen;
-    metaRatingText = "Good";
-  } else if (metaRating >= 90) {
-    metaRatingColor = Colors.green;
-    metaRatingText = "Great";
-  }
-  if (userRating == null) {
-    userRatingColor = Colors.grey;
-    userRatingText = "N/A";
-    userRating = 0;
-  } else if (userRating < 20) {
-    userRatingColor = Colors.red;
-    userRatingText = "Bad";
-  } else if (userRating >= 20 && userRating < 50) {
-    userRatingColor = Colors.orange;
-    userRatingText = "Unlikely";
-  } else if (userRating >= 50 && userRating < 75) {
-    userRatingColor = Colors.yellow;
-    userRatingText = "Average";
-  } else if (userRating >= 75 && userRating < 90) {
-    userRatingColor = Colors.lightGreen;
-    userRatingText = "Good";
-  } else if (userRating >= 90) {
-    userRatingColor = Colors.green;
-    userRatingText = "Great";
-  }
-  Widget ratingWidget = Column(
-    children: [
-      const Text("Meta Ratings", style: TextStyle(fontSize: 16)),
-      Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        child: Stack(
-          children: [
-            Stack(
-              children: [
-                SizedBox(
-                  height: 100,
-                  width: 100,
-                  child: CircularProgressIndicator(
-                    value: 1,
-                    color: Colors.white.withAlpha(50),
-                    strokeWidth: 12,
-                  ),
-                ),
-                SizedBox(
-                  height: 100,
-                  width: 100,
-                  child: CircularProgressIndicator(
-                    value: metaRating / 100,
-                    color: metaRatingColor,
-                    strokeWidth: 12,
-                    strokeCap: StrokeCap.round,
-                  ),
-                ),
-              ],
-            ),
-            Positioned.fill(
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "$metaRating",
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 25),
-                    ),
-                    Text(metaRatingText,
-                        style: TextStyle(color: metaRatingColor)),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-      const Text("User Ratings", style: TextStyle(fontSize: 16)),
-      Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        child: Stack(
-          children: [
-            Stack(
-              children: [
-                SizedBox(
-                  height: 100,
-                  width: 100,
-                  child: CircularProgressIndicator(
-                    value: 1,
-                    color: Colors.white.withAlpha(50),
-                    strokeWidth: 12,
-                  ),
-                ),
-                SizedBox(
-                  height: 100,
-                  width: 100,
-                  child: CircularProgressIndicator(
-                    value: userRating / 100,
-                    color: userRatingColor,
-                    strokeWidth: 12,
-                    strokeCap: StrokeCap.round,
-                  ),
-                ),
-              ],
-            ),
-            Positioned.fill(
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "$userRating",
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 25),
-                    ),
-                    Text(userRatingText,
-                        style: TextStyle(color: userRatingColor)),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    ],
+  return Wrap(
+    children: webSitesList,
   );
-  return ratingWidget;
 }
 
 Widget getIcons(data) {
@@ -1419,7 +1129,7 @@ Widget getIcons(data) {
           Tooltip(
             message: "Steam",
             child: Card(
-              color: Colors.grey.withOpacity(0.3),
+              color: Colors.grey.withValues(alpha: 0.3),
               child: IconButton(
                 icon: SvgPicture.asset(
                   "assets/images/steam.svg",
@@ -1439,7 +1149,7 @@ Widget getIcons(data) {
           Tooltip(
             message: "Epic Games",
             child: Card(
-              color: Colors.grey.withOpacity(0.3),
+              color: Colors.grey.withValues(alpha: 0.3),
               child: IconButton(
                 icon: SvgPicture.asset(
                   "assets/images/epic-games.svg",

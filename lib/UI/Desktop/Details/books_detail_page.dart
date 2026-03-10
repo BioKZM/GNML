@@ -1,14 +1,14 @@
 import 'dart:convert';
 import 'dart:ui';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:gnml/Data/Model/book_model.dart';
-import 'package:gnml/Helper/theme_helper.dart';
-import 'package:gnml/Logic/bookspage_logic.dart';
-import 'package:gnml/Widgets/circularprogressindicator.dart';
-import 'package:gnml/Widgets/custom_app_window.dart';
+import 'package:vault/Data/Model/book_model.dart';
+import 'package:vault/Helper/content_type.dart';
+import 'package:vault/Helper/theme_helper.dart';
+import 'package:vault/Logic/bookspage_logic.dart';
+import 'package:vault/Providers/library_provider.dart';
+import 'package:vault/Widgets/circularprogressindicator.dart';
+import 'package:vault/Widgets/custom_app_window.dart';
 import 'package:provider/provider.dart';
 
 class BooksDetailPage extends StatefulWidget {
@@ -23,8 +23,6 @@ class BooksDetailPage extends StatefulWidget {
 }
 
 class _BooksDetailPageState extends State<BooksDetailPage> {
-  User? user = FirebaseAuth.instance.currentUser;
-  bool boolean = false;
   @override
   void initState() {
     super.initState();
@@ -33,42 +31,11 @@ class _BooksDetailPageState extends State<BooksDetailPage> {
   @override
   Widget build(BuildContext context) {
     int themeColor = Provider.of<ThemeProvider>(context).color;
-    Future<DocumentSnapshot> getData() async {
-      CollectionReference collectionReference =
-          FirebaseFirestore.instance.collection('brews');
-
-      DocumentReference documentReference =
-          collectionReference.doc('${user!.email}');
-
-      DocumentSnapshot documentSnapshot = await documentReference.get();
-
-      return documentSnapshot;
-    }
-
-    Future<void> updateData(
-        List games, List movies, List series, List books, List actors) async {
-      CollectionReference collectionReference =
-          FirebaseFirestore.instance.collection('brews');
-      DocumentReference documentReference =
-          collectionReference.doc('${user!.email}');
-      Map<String, dynamic> updatedData = {
-        "library": {
-          "games": games,
-          "movies": movies,
-          "series": series,
-          "books": books,
-          "actors": actors,
-        }
-      };
-
-      await documentReference.update(updatedData);
-    }
-
     return FutureBuilder<List<BookModel>>(
         future: BooksPageLogic().searchBooks(widget.bookID),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
-            var data;
+            BookModel? data;
             for (var x in snapshot.data!.toList()) {
               if (x.id?.split("/").last == widget.bookID) {
                 data = x;
@@ -76,275 +43,242 @@ class _BooksDetailPageState extends State<BooksDetailPage> {
                 data = snapshot.data?[0];
               }
             }
-            String? description = data?.description;
+            if (data == null) {
+              return const Scaffold(
+                  body: Center(child: Text("Book not found")));
+            }
+            String? description = data.description;
             description = utf8
-                .decode(data!.description.toString().runes.toList(),
+                .decode(data.description.toString().runes.toList(),
                     allowMalformed: true)
-                .replaceAll("�", "");
-            return FutureBuilder(
-                future: getData(),
-                builder: (context, AsyncSnapshot<DocumentSnapshot> snapshot) {
-                  if (snapshot.hasData &&
-                      snapshot.connectionState == ConnectionState.done) {
-                    Map<String, dynamic> list =
-                        snapshot.data?.data() as Map<String, dynamic>;
-                    List gamesList = list['library']['games'];
-                    List moviesList = list['library']['movies'];
-                    List seriesList = list['library']['series'];
-                    List booksList = list['library']['books'];
-                    List actorsList = list['library']['actors'];
-                    Map<String, dynamic> bookMap = {
-                      "bookID": widget.bookID,
-                      "imageURL": data.imageURL,
-                      "bookName": data.title,
-                    };
-                    for (var x in booksList) {
-                      if (x['bookID'] == widget.bookID) {
-                        boolean = true;
-                      }
-                    }
-                    if (booksList.contains(widget.bookID)) {
-                      boolean = true;
-                    }
-                    return Scaffold(
-                      body: Container(
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: NetworkImage(data.imageURL.toString()),
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        child: Container(
-                          height: double.maxFinite,
-                          color: Colors.black.withOpacity(0.7),
-                          child: SingleChildScrollView(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            child: BackdropFilter(
-                              filter:
-                                  ImageFilter.blur(sigmaX: 100, sigmaY: 100),
-                              child: Column(
-                                children: [
-                                  SizedBox(
-                                    height: 45,
-                                    width: MediaQuery.of(context).size.width,
-                                    child: CustomAppWindow(
-                                      isExitable: true,
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                        64, 96, 64, 48),
-                                    child: Table(
+                .replaceAll("", "");
+            return Consumer<LibraryProvider>(
+              builder: (context, libraryProvider, child) {
+                final isLiked = libraryProvider.isInLibrary(
+                  ContentType.books,
+                  widget.bookID,
+                );
+                final bookMap = {
+                  "id": widget.bookID,
+                  "type": "book",
+                  "title": data!.title,
+                  "imageURL": data.imageURL,
+                  "folder": "library",
+                };
+                return Scaffold(
+                  body: Container(
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: NetworkImage(data.imageURL.toString()),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    child: Container(
+                      height: double.maxFinite,
+                      color: Colors.black.withValues(alpha: 0.7),
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 100, sigmaY: 100),
+                          child: Column(
+                            children: [
+                              SizedBox(
+                                height: 45,
+                                width: MediaQuery.of(context).size.width,
+                                child: CustomAppWindow(
+                                  isExitable: true,
+                                ),
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.fromLTRB(64, 96, 64, 48),
+                                child: Table(
+                                  children: [
+                                    TableRow(
                                       children: [
-                                        TableRow(
-                                          children: [
-                                            TableCell(
-                                              child: Column(
-                                                children: [
-                                                  Card(
-                                                    elevation: 0,
-                                                    child: SizedBox(
-                                                      height: 350,
-                                                      child: ClipRRect(
-                                                        borderRadius:
-                                                            const BorderRadius
-                                                                .all(
-                                                                Radius.circular(
-                                                                    12)),
-                                                        child: Image(
-                                                            image: NetworkImage(
-                                                                data.imageURL
-                                                                    .toString()),
-                                                            fit: BoxFit.fill),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  Padding(
-                                                    padding:
-                                                        const EdgeInsets.only(
-                                                            right: 16.0),
-                                                    child: StatefulBuilder(
-                                                        builder: (context,
-                                                            setState) {
-                                                      return Card(
-                                                        child: IconButton(
-                                                          highlightColor:
-                                                              Color(themeColor),
-                                                          hoverColor: Colors
-                                                              .transparent,
-                                                          icon: boolean
-                                                              ? Tooltip(
-                                                                  message:
-                                                                      "Remove from Library",
-                                                                  child: Icon(
-                                                                      Icons
-                                                                          .favorite,
-                                                                      color: Color(
-                                                                          themeColor)),
-                                                                )
-                                                              : const Tooltip(
-                                                                  message:
-                                                                      "Add to Library",
-                                                                  child: Icon(Icons
-                                                                      .favorite_outline),
-                                                                ),
-                                                          onPressed: () {
-                                                            if (boolean) {
-                                                              booksList.removeWhere(
-                                                                  (element) =>
-                                                                      element[
-                                                                          'bookID'] ==
-                                                                      widget
-                                                                          .bookID);
-                                                              updateData(
-                                                                  gamesList,
-                                                                  moviesList,
-                                                                  seriesList,
-                                                                  booksList,
-                                                                  actorsList);
-                                                            } else {
-                                                              booksList
-                                                                  .add(bookMap);
-                                                              updateData(
-                                                                  gamesList,
-                                                                  moviesList,
-                                                                  seriesList,
-                                                                  booksList,
-                                                                  actorsList);
-                                                            }
-                                                            setState(() =>
-                                                                boolean =
-                                                                    !boolean);
-                                                          },
-                                                        ),
-                                                      );
-                                                    }),
-                                                  )
-                                                ],
-                                              ),
-                                            ),
-                                            TableCell(
-                                              child: Padding(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        horizontal: 64),
+                                        TableCell(
+                                          child: Column(
+                                            children: [
+                                              Card(
+                                                elevation: 0,
                                                 child: SizedBox(
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Text(
-                                                          data.title.toString(),
-                                                          style: const TextStyle(
-                                                              fontSize: 50,
-                                                              fontFamily:
-                                                                  'RobotoBold')),
-                                                      const Divider(
-                                                          color: Colors
-                                                              .transparent),
-                                                      const Divider(
-                                                          color: Colors
-                                                              .transparent),
-                                                      const Divider(
-                                                          color: Colors
-                                                              .transparent),
-                                                      const Divider(
-                                                          color: Colors
-                                                              .transparent),
-                                                      Row(
-                                                        children: [
-                                                          const Column(
-                                                            crossAxisAlignment:
-                                                                CrossAxisAlignment
-                                                                    .start,
-                                                            children: [
-                                                              Text("Authors: "),
-                                                              Text(
-                                                                  "Publish Date: "),
-                                                              Text(
-                                                                  "Page Count: "),
-                                                            ],
-                                                          ),
-                                                          Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .only(
-                                                                    left: 16),
-                                                            child: Column(
-                                                              crossAxisAlignment:
-                                                                  CrossAxisAlignment
-                                                                      .start,
-                                                              children: [
-                                                                Row(
-                                                                  children:
-                                                                      getAuthorList(
-                                                                          data),
-                                                                ),
-                                                                getPublishDate(
-                                                                    data),
-                                                                getPageCount(
-                                                                    data),
-                                                              ],
+                                                  height: 350,
+                                                  child: ClipRRect(
+                                                    borderRadius:
+                                                        const BorderRadius.all(
+                                                            Radius.circular(
+                                                                12)),
+                                                    child: Image(
+                                                        image: NetworkImage(data
+                                                            .imageURL
+                                                            .toString()),
+                                                        fit: BoxFit.fill),
+                                                  ),
+                                                ),
+                                              ),
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                    right: 16.0),
+                                                child: Card(
+                                                  child: IconButton(
+                                                    highlightColor:
+                                                        Color(themeColor),
+                                                    hoverColor:
+                                                        Colors.transparent,
+                                                    icon: isLiked
+                                                        ? Tooltip(
+                                                            message:
+                                                                "Remove from Library",
+                                                            child: Icon(
+                                                              Icons.favorite,
+                                                              color: Color(
+                                                                  themeColor),
                                                             ),
+                                                          )
+                                                        : const Tooltip(
+                                                            message:
+                                                                "Add to Library",
+                                                            child: Icon(Icons
+                                                                .favorite_outline),
                                                           ),
-                                                        ],
-                                                      ),
-                                                      const VerticalDivider(
-                                                        indent: 20,
-                                                      ),
-                                                      Row(
+                                                    onPressed: () {
+                                                      if (isLiked) {
+                                                        libraryProvider
+                                                            .removeFromLibrary(
+                                                          ContentType.books,
+                                                          widget.bookID,
+                                                        );
+                                                      } else {
+                                                        libraryProvider
+                                                            .addOrUpdateItem(
+                                                          type:
+                                                              ContentType.books,
+                                                          id: widget.bookID,
+                                                          title: data?.title,
+                                                          imageUrl:
+                                                              data?.imageURL,
+                                                          extra: bookMap,
+                                                        );
+                                                      }
+                                                    },
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        TableCell(
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 64),
+                                            child: SizedBox(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(data.title.toString(),
+                                                      style: const TextStyle(
+                                                          fontSize: 50,
+                                                          fontFamily:
+                                                              'RobotoBold')),
+                                                  const Divider(
+                                                      color:
+                                                          Colors.transparent),
+                                                  const Divider(
+                                                      color:
+                                                          Colors.transparent),
+                                                  const Divider(
+                                                      color:
+                                                          Colors.transparent),
+                                                  const Divider(
+                                                      color:
+                                                          Colors.transparent),
+                                                  Row(
+                                                    children: [
+                                                      const Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
                                                         children: [
-                                                          Expanded(
-                                                            child: Text(
-                                                                description!),
-                                                          ),
+                                                          Text("Authors: "),
+                                                          Text(
+                                                              "Publish Date: "),
+                                                          Text("Page Count: "),
                                                         ],
+                                                      ),
+                                                      Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .only(left: 16),
+                                                        child: Column(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .start,
+                                                          children: [
+                                                            Row(
+                                                              children:
+                                                                  getAuthorList(
+                                                                      data),
+                                                            ),
+                                                            getPublishDate(
+                                                                data),
+                                                            getPageCount(data),
+                                                          ],
+                                                        ),
                                                       ),
                                                     ],
                                                   ),
-                                                ),
-                                              ),
-                                            ),
-                                            TableCell(
-                                              child: Container(
-                                                height: 350,
-                                                color: Colors.transparent,
-                                                child: const Card(
-                                                  elevation: 0,
-                                                  color: Colors.transparent,
-                                                  child: Column(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .center,
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .center,
+                                                  const VerticalDivider(
+                                                    indent: 20,
                                                   ),
-                                                ),
+                                                  Row(
+                                                    children: [
+                                                      Expanded(
+                                                        child:
+                                                            Text(description!),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
                                               ),
                                             ),
-                                          ],
+                                          ),
+                                        ),
+                                        TableCell(
+                                          child: Container(
+                                            height: 350,
+                                            color: Colors.transparent,
+                                            child: const Card(
+                                              elevation: 0,
+                                              color: Colors.transparent,
+                                              child: Column(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.center,
+                                              ),
+                                            ),
+                                          ),
                                         ),
                                       ],
-                                      columnWidths: const {
-                                        0: FlexColumnWidth(0.5),
-                                        1: FlexColumnWidth(2),
-                                        2: FlexColumnWidth(0.5),
-                                      },
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                  columnWidths: const {
+                                    0: FlexColumnWidth(0.5),
+                                    1: FlexColumnWidth(2),
+                                    2: FlexColumnWidth(0.5),
+                                  },
+                                ),
                               ),
-                            ),
+                            ],
                           ),
                         ),
                       ),
-                    );
-                  } else {
-                    return const CustomCPI();
-                  }
-                });
+                    ),
+                  ),
+                );
+              },
+            );
           } else {
             bool connectionBool = true;
             if (snapshot.connectionState == ConnectionState.done) {
