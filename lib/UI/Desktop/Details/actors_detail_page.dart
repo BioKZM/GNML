@@ -2,15 +2,15 @@ import 'dart:convert';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:vault/Data/Model/actor_model.dart';
+import 'package:vault/data/model/actor_model.dart';
 import 'package:vault/Helper/content_type.dart';
 import 'package:vault/Helper/theme_helper.dart';
 import 'package:vault/Logic/actorpage_logic.dart';
-import 'package:vault/UI/Desktop/Details/movie_detail_page.dart';
-import 'package:vault/UI/Desktop/Details/serie_detail_page.dart';
+import 'package:vault/ui/Desktop/Details/movie_detail_page.dart';
+import 'package:vault/ui/Desktop/Details/serie_detail_page.dart';
 import 'package:vault/Providers/library_provider.dart';
-import 'package:vault/Widgets/circularprogressindicator.dart';
-import 'package:vault/Widgets/custom_app_window.dart';
+// import 'package:vault/Widgets/circularprogressindicator.dart';
+// import 'package:vault/Widgets/custom_app_window.dart';
 import 'package:provider/provider.dart';
 
 class ActorDetailPage extends StatefulWidget {
@@ -89,7 +89,7 @@ class _ActorDetailPageState extends State<ActorDetailPage> {
                               SizedBox(
                                 height: 45,
                                 width: MediaQuery.of(context).size.width,
-                                child: CustomAppWindow(isExitable: true),
+                                // child: CustomAppWindow(isExitable: true),
                               ),
                               Padding(
                                 padding:
@@ -881,7 +881,7 @@ class _ActorDetailPageState extends State<ActorDetailPage> {
               ),
               body: Center(
                   child: connectionBool
-                      ? const CustomCPI()
+                      ? const CircularProgressIndicator()
                       : Card(
                           child: Column(
                             mainAxisSize: MainAxisSize.min,

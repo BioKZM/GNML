@@ -11,12 +11,12 @@ import 'dart:math' as math;
 import 'package:vault/Helper/auth.dart';
 import 'package:vault/Helper/theme_helper.dart';
 import 'package:vault/Providers/library_provider.dart';
-import 'package:vault/UI/Authentication/login_page.dart';
-import 'package:vault/UI/Desktop/Details/anime_detail_page.dart';
-import 'package:vault/UI/Desktop/Details/game_detail_page.dart';
-import 'package:vault/UI/Desktop/Details/movie_detail_page.dart';
-import 'package:vault/UI/Desktop/Details/serie_detail_page.dart';
-import 'package:vault/Widgets/custom_app_window.dart';
+import 'package:vault/ui/auth/login_page.dart';
+import 'package:vault/ui/Desktop/Details/anime_detail_page.dart';
+import 'package:vault/ui/Desktop/Details/game_detail_page.dart';
+import 'package:vault/ui/Desktop/Details/movie_detail_page.dart';
+import 'package:vault/ui/Desktop/Details/serie_detail_page.dart';
+import 'package:vault/ui/widgets/custom_app_window.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vault/Services/database_service.dart';
@@ -30,10 +30,10 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  User? user = FirebaseAuth.instance.currentUser;
+  User? get user => FirebaseAuth.instance.currentUser;
   final AuthService _auth = AuthService();
   final DatabaseService _database = FirebaseDatabaseImpl();
-  final firebase = FirebaseStorage.instance;
+  FirebaseStorage get firebase => FirebaseStorage.instance;
   int _reloadToken = 0;
   @override
   void initState() {
@@ -42,7 +42,6 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void getUser() async {
-    user = FirebaseAuth.instance.currentUser;
     setState(() {});
   }
 

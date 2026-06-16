@@ -9,6 +9,10 @@ abstract class DatabaseService {
     bool merge = true,
   });
 
+  Future<void> patchUserDocument(String uid, Map<String, dynamic> patch);
+
+  Future<void> deleteUserFields(String uid, List<String> fieldPaths);
+
   Future<void> ensureUserInitialized({
     required User user,
     String? username,

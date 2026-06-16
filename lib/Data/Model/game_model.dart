@@ -1,8 +1,8 @@
 // ignore_for_file: non_constant_identifier_names
 import 'package:hive/hive.dart';
-import 'package:vault/Data/Model/base_content_model.dart';
+import 'package:vault/data/model/base_content_model.dart';
 
-part 'game_model.g.dart';
+part 'auto_generated/game_model.g.dart';
 
 @HiveType(typeId: 0)
 class GameModel implements BaseContentModel {
@@ -113,6 +113,7 @@ class GameModel implements BaseContentModel {
   GameModel.fromJson(Map<String, dynamic> json) {
     id = json['id'];
     cover = json['cover'];
+    game_engines = json['game_engines'];
     genres = json['genres'];
     name = json['name'];
     platforms = json['platforms'];
@@ -131,15 +132,18 @@ class GameModel implements BaseContentModel {
     }
     themes = json['themes'];
     tags = json["tags"];
+    videos = json['videos'];
     first_release_date = getFirstReleaseDate(json);
     url = getCoverURL(json, cover);
     image_id = getImageID(json, cover);
     language_support = getLanguageSupport(json);
     screenshots_list = getScreenshotIDList(json);
     websites = json['websites'];
-    if (json['aggregated_rating'] != null && json['rating'] != null) {
-      aggregated_rating = json['aggregated_rating'].toInt();
-      rating = json['rating'].toInt();
+    if (json['aggregated_rating'] != null) {
+      aggregated_rating = (json['aggregated_rating'] as num).toInt();
+    }
+    if (json['rating'] != null) {
+      rating = (json['rating'] as num).toInt();
     }
   }
 }

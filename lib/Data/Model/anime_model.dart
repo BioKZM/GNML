@@ -1,8 +1,24 @@
 // ignore_for_file: non_constant_identifier_names
 import 'package:hive/hive.dart';
-import 'package:vault/Data/Model/base_content_model.dart';
+import 'package:vault/data/model/base_content_model.dart';
 
-part 'anime_model.g.dart';
+part 'auto_generated/anime_model.g.dart';
+
+String? normalizeAnimeImageUrl(String? url) {
+  if (url == null || url.trim().isEmpty) return null;
+  var normalized = Uri.encodeFull(url.trim());
+  if (normalized.contains('myanimelist.net/images/')) {
+    normalized = normalized.replaceFirst(
+      'https://myanimelist.net/images/',
+      'https://cdn.myanimelist.net/images/',
+    );
+    normalized = normalized.replaceFirst(
+      'http://myanimelist.net/images/',
+      'https://cdn.myanimelist.net/images/',
+    );
+  }
+  return normalized;
+}
 
 @HiveType(typeId: 5)
 class AnimeModel implements BaseContentModel {
@@ -49,9 +65,17 @@ class AnimeModel implements BaseContentModel {
   AnimeModel.fromJson(Map<String, dynamic> json) {
     id = json['mal_id'];
     title = json['title'];
-    if (json['images'] != null && json['images']['jpg'] != null) {
-      imageURL = json['images']['jpg']['large_image_url'] ??
-          json['images']['jpg']['image_url'];
+    if (json['images'] != null) {
+      final jpg = json['images']['jpg'];
+      final webp = json['images']['webp'];
+      imageURL = normalizeAnimeImageUrl(
+        webp?['large_image_url'] ??
+            webp?['image_url'] ??
+            webp?['small_image_url'] ??
+            jpg?['large_image_url'] ??
+            jpg?['image_url'] ??
+            jpg?['small_image_url'],
+      );
     }
     synopsis = json['synopsis'];
     score = json['score']?.toDouble();

@@ -77,10 +77,10 @@ dependencies:
   bitsdojo_window: ^0.1.6
   hive: ^2.2.3
   hive_flutter: ^1.1.0
+  youtube_player_iframe: ^5.2.1
   # flutter_launcher_icons: ^0.13.1
   # firebase_auth_desktop: ^0.1.1-dev.0
   # firebase_core_desktop: ^0.1.1-dev.0
-  # youtube_player_flutter: ^8.1.2
 
 dev_dependencies:
   flutter_test:

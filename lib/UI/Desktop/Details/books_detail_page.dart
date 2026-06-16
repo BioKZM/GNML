@@ -2,13 +2,13 @@ import 'dart:convert';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:vault/Data/Model/book_model.dart';
+import 'package:vault/data/model/book_model.dart';
 import 'package:vault/Helper/content_type.dart';
 import 'package:vault/Helper/theme_helper.dart';
 import 'package:vault/Logic/bookspage_logic.dart';
 import 'package:vault/Providers/library_provider.dart';
-import 'package:vault/Widgets/circularprogressindicator.dart';
-import 'package:vault/Widgets/custom_app_window.dart';
+import 'package:vault/ui/widgets/circularprogressindicator.dart';
+import 'package:vault/ui/widgets/custom_app_window.dart';
 import 'package:provider/provider.dart';
 
 class BooksDetailPage extends StatefulWidget {

@@ -164,6 +164,16 @@ class RatingHelper {
       // Property doesn't exist
     }
 
+    try {
+      // ignore: avoid_dynamic_calls
+      if (data.score != null) {
+        // ignore: avoid_dynamic_calls
+        return (data.score as num).toDouble() * 10;
+      }
+    } catch (e) {
+      // Property doesn't exist
+    }
+
     return 0.0;
   }
 }

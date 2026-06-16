@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:vault/Logic/seriespage_logic.dart';
 
 class SeriesData {
@@ -46,60 +45,11 @@ class SeriesData {
     return "$day $month $year";
   }
 
-  void addToSeriesList(
-      List<dynamic> seriesList, Map<String, dynamic> serieMap) {
-    seriesList.add(serieMap);
-  }
-
-  void removeFromSeriesList(List<dynamic> seriesList, int serieID) {
-    seriesList.removeWhere((element) => element['serieID'] == serieID);
-  }
-
-  void addFavoritesFromData(List<dynamic> seriesList, List<dynamic> data,
-      int innerIndex, ValueNotifier<bool> isFavorite) {
-    for (var x in seriesList) {
-      if (x['serieID'] == data[innerIndex].id) {
-        isFavorite.value = true;
-      }
-    }
-  }
-
-  void addFavoritesFromList(
-      List<dynamic> seriesList,
-      List<dynamic>? favoriteSeries,
-      int index,
-      ValueNotifier<bool> isFavorited) {
-    for (var x in favoriteSeries!) {
-      if (x['serieID'] == seriesList[index]['serieID']) {
-        isFavorited.value = true;
-      }
-    }
-  }
-
-  Map<String, dynamic> getSeriesMap(
-      int serieID, List<dynamic> data, int innerIndex) {
-    Map<String, dynamic> serieMap = {
-      "serieID": serieID,
-      "imageURL": data[innerIndex].imageURL.toString(),
-      "serieName": data[innerIndex].name,
-    };
-    return serieMap;
-  }
-
   int getSerieID(List<dynamic>? data, int innerIndex) {
     var serieID = 0;
     if (data![innerIndex].id != null) {
       serieID = data[innerIndex].id!;
     }
     return serieID;
-  }
-
-  Map<String, dynamic> getSerieMapLibrary(List<dynamic> seriesList, int index) {
-    Map<String, dynamic> serieMap = {
-      "serieID": seriesList[index]['serieID'],
-      "imageURL": seriesList[index]['imageURL'],
-      "serieName": seriesList[index]['serieName'],
-    };
-    return serieMap;
   }
 }

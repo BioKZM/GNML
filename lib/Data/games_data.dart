@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:vault/Data/Model/game_model.dart';
+import 'package:vault/data/model/game_model.dart';
 import 'package:intl/intl.dart';
 
 class GamesData {
@@ -31,46 +31,6 @@ class GamesData {
       dateTime = DateFormat('dd.MM.yyyy').format(dateTime);
     }
     return dateTime;
-  }
-
-  void addFavoritesFromData(List<dynamic> gamesList, List<GameModel> pageData,
-      int innerIndex, ValueNotifier<bool> isFavorite) {
-    for (var x in gamesList) {
-      if (x['gameID'] == pageData[innerIndex].id) {
-        isFavorite.value = true;
-      }
-    }
-  }
-
-  void addFavoritesFromList(
-      List<dynamic> gamesList,
-      List<dynamic>? favoriteGames,
-      int index,
-      ValueNotifier<bool> isFavorited) {
-    for (var x in favoriteGames!) {
-      if (x['gameID'] == gamesList[index]['gameID']) {
-        isFavorited.value = true;
-      }
-    }
-  }
-
-  void removeFromGameList(List<dynamic> gamesList, int? gameID) {
-    gamesList.removeWhere((element) => element['gameID'] == gameID);
-  }
-
-  Map<String, dynamic> getGameMap(
-      List<GameModel> pageData, int innerIndex, imageId) {
-    Map<String, dynamic> gameMap = {
-      "gameID": pageData[innerIndex].id,
-      "imageURL":
-          "https://images.igdb.com/igdb/image/upload/t_original/$imageId.png",
-      "gameName": pageData[innerIndex].name,
-    };
-    return gameMap;
-  }
-
-  void addToGamesList(List<dynamic> gamesList, Map<String, dynamic> gameMap) {
-    gamesList.add(gameMap);
   }
 
   Widget gameCategoryCard(int? category) {
@@ -138,14 +98,5 @@ class GamesData {
       ),
     );
     return gameCategoryCard;
-  }
-
-  Map<String, dynamic> getGameMapLibrary(List<dynamic> gamesList, int index) {
-    Map<String, dynamic> gameMap = {
-      "gameID": gamesList[index]['gameID'],
-      "imageURL": gamesList[index]['imageURL'],
-      "gameName": gamesList[index]['gameName'],
-    };
-    return gameMap;
   }
 }

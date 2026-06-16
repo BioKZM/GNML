@@ -1,63 +1,78 @@
 import 'dart:async';
 import 'dart:io' show Platform;
+
+import 'package:app_links/app_links.dart';
+import 'package:bitsdojo_window/bitsdojo_window.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:vault/Data/Model/game_model.dart';
-import 'package:vault/Data/Model/movie_model.dart';
-import 'package:vault/Data/Model/serie_model.dart';
-import 'package:vault/Data/Model/book_model.dart';
-import 'package:vault/Data/Model/actor_model.dart';
-import 'package:vault/Data/Model/anime_model.dart';
-import 'package:vault/Data/theme_data.dart';
+import 'package:provider/provider.dart';
+import 'package:vault/data/model/actor_model.dart';
+import 'package:vault/data/model/anime_model.dart';
+import 'package:vault/data/model/book_model.dart';
+import 'package:vault/data/model/game_model.dart';
+import 'package:vault/data/model/movie_model.dart';
+import 'package:vault/data/model/serie_model.dart';
+import 'package:vault/data/theme_data.dart';
 import 'package:vault/Helper/redirect.dart';
 import 'package:vault/Helper/theme_helper.dart';
 import 'package:vault/Helper/window_helper.dart';
-import 'package:vault/Widgets/custom_app_window.dart';
-import 'package:provider/provider.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:bitsdojo_window/bitsdojo_window.dart';
-import 'package:app_links/app_links.dart';
-
 import 'package:vault/Providers/library_provider.dart';
-import 'package:vault/UI/Desktop/User/profile_page.dart';
-import 'package:vault/UI/Desktop/User/public_profile_page.dart';
+import 'package:vault/Providers/user_provider.dart';
+import 'package:vault/ui/Desktop/User/profile_page.dart';
+import 'package:vault/ui/Desktop/User/public_profile_page.dart';
+import 'package:vault/ui/widgets/custom_app_window.dart';
+
+import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: ".env");
+  debugPrint('BOOT 1: binding ready');
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  debugPrint('BOOT 2: firebase ready');
 
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (_) {}
+  debugPrint('BOOT 3: dotenv ready');
 
-  // Initialize Hive
   await Hive.initFlutter();
-  Hive.registerAdapter(GameModelAdapter());
-  Hive.registerAdapter(MovieModelAdapter());
-  Hive.registerAdapter(SerieModelAdapter());
-  Hive.registerAdapter(BookModelAdapter());
-  Hive.registerAdapter(ActorModelAdapter());
-  Hive.registerAdapter(AnimeModelAdapter());
+  debugPrint('BOOT 4: hive ready');
+  if (!Hive.isAdapterRegistered(0)) Hive.registerAdapter(GameModelAdapter());
+  if (!Hive.isAdapterRegistered(1)) Hive.registerAdapter(MovieModelAdapter());
+  if (!Hive.isAdapterRegistered(2)) Hive.registerAdapter(SerieModelAdapter());
+  if (!Hive.isAdapterRegistered(3)) Hive.registerAdapter(BookModelAdapter());
+  if (!Hive.isAdapterRegistered(4)) Hive.registerAdapter(ActorModelAdapter());
+  if (!Hive.isAdapterRegistered(5)) Hive.registerAdapter(AnimeModelAdapter());
+  debugPrint('BOOT 5: adapters ready');
+
   await Hive.openBox('content_cache');
-  await Hive.openBox('user_library'); // Ensure this box is open
+  await Hive.openBox('user_library');
+  await Hive.openBox('user_profile');
+  debugPrint('BOOT 6: boxes ready');
 
-  ThemeProvider themeProvider = ThemeProvider();
+  final themeProvider = ThemeProvider();
   await themeProvider.getTheme();
+  debugPrint('BOOT 7: theme ready');
 
-  LibraryProvider libraryProvider = LibraryProvider();
-  await libraryProvider.init();
+  final libraryProvider = LibraryProvider();
+  final userProvider = UserProvider();
+  debugPrint('BOOT 8: providers created');
 
   if (!kIsWeb && Platform.isWindows) {
     doWhenWindowReady(() async {
-      WindowProvider windowProvider = WindowProvider();
+      final windowProvider = WindowProvider();
       await windowProvider.getSize();
 
-      Size initialSize = Size(windowProvider.width, windowProvider.height);
+      final initialSize = Size(windowProvider.width, windowProvider.height);
       appWindow.minSize = const Size(800, 600);
       appWindow.size = initialSize;
       appWindow.alignment = Alignment.center;
-      appWindow.title = "VAULT";
+      appWindow.title = 'VAULT';
       appWindow.show();
     });
   }
@@ -67,10 +82,12 @@ Future<void> main() async {
       providers: [
         ChangeNotifierProvider.value(value: themeProvider),
         ChangeNotifierProvider.value(value: libraryProvider),
+        ChangeNotifierProvider.value(value: userProvider),
       ],
       child: const MainPage(),
     ),
   );
+  debugPrint('BOOT 9: runApp called');
 }
 
 class MainPage extends StatefulWidget {
@@ -88,8 +105,10 @@ class _MainPageState extends State<MainPage> {
   @override
   void initState() {
     super.initState();
-    _appLinks = AppLinks();
-    _initLinks();
+    if (!kIsWeb) {
+      _appLinks = AppLinks();
+      _initLinks();
+    }
   }
 
   Future<void> _initLinks() async {

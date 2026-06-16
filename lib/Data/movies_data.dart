@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:vault/Logic/moviepage_logic.dart';
 
 class MoviesData {
@@ -51,56 +50,5 @@ class MoviesData {
       movieID = data[innerIndex].id!;
     }
     return movieID;
-  }
-
-  void addToMoviesList(
-      List<dynamic> moviesList, Map<String, dynamic> movieMap) {
-    moviesList.add(movieMap);
-  }
-
-  void removeFromMoviesList(List<dynamic> moviesList, int movieID) {
-    moviesList.removeWhere((element) => element['movieID'] == movieID);
-  }
-
-  void addFavoritesFromData(List<dynamic> moviesList, List<dynamic> data,
-      int innerIndex, ValueNotifier<bool> isFavorite) {
-    for (var x in moviesList) {
-      if (x['movieID'] == data[innerIndex].id) {
-        isFavorite.value = true;
-      }
-    }
-  }
-
-  void addFavoritesFromList(
-      List<dynamic> moviesList,
-      List<dynamic>? favoriteMovies,
-      int index,
-      ValueNotifier<bool> isFavorited) {
-    for (var x in favoriteMovies!) {
-      if (x['movieID'] == moviesList[index]['movieID']) {
-        isFavorited.value = true;
-      }
-    }
-  }
-
-  Map<String, dynamic> getMovieMap(List<dynamic> data, int innerIndex) {
-    Map<String, dynamic> movieMap = {
-      "movieID": data[innerIndex].id,
-      "imageURL": data[innerIndex].imageURL.toString(),
-      "movieName": data[innerIndex].title,
-    };
-    return movieMap;
-  }
-
-  Map<String, dynamic> getMovieMapLibrary(
-    List<dynamic> data,
-    int innerIndex,
-  ) {
-    Map<String, dynamic> movieMap = {
-      "movieID": data[innerIndex]['movieID'],
-      "imageURL": data[innerIndex]['imageURL'],
-      "movieName": data[innerIndex]['movieName'],
-    };
-    return movieMap;
   }
 }

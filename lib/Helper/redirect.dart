@@ -2,11 +2,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:vault/Providers/library_provider.dart';
-import 'package:vault/UI/layout_scaffold.dart';
-import 'package:vault/UI/Views/home_view.dart';
-import 'package:vault/UI/Authentication/login_page.dart';
+import 'package:vault/Providers/user_provider.dart';
+import 'package:vault/ui/Views/home_view.dart';
+import 'package:vault/ui/Desktop/Library/library_page.dart';
+import 'package:vault/ui/auth/login_page.dart';
 import 'package:lottie/lottie.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:vault/ui/layout_scaffold.dart';
 
 class Redirect extends StatefulWidget {
   const Redirect({Key? key}) : super(key: key);
@@ -38,11 +40,12 @@ class _RedirectState extends State<Redirect> {
           _initializedUid = uid;
           WidgetsBinding.instance.addPostFrameCallback((_) {
             Provider.of<LibraryProvider>(context, listen: false).init();
+            Provider.of<UserProvider>(context, listen: false).init();
           });
         }
 
         // If user is found and connection is active
-        return const HomeView();
+        return const LayoutScaffold();
       },
     );
   }

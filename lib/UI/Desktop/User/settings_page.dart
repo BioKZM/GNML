@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hsvcolor_picker/flutter_hsvcolor_picker.dart';
 import 'package:vault/Helper/theme_helper.dart';
-import 'package:vault/Widgets/circularprogressindicator.dart';
-import 'package:vault/Widgets/custom_app_window.dart';
+import 'package:vault/ui/widgets/circularprogressindicator.dart';
+import 'package:vault/ui/widgets/custom_app_window.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';

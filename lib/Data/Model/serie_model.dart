@@ -1,8 +1,8 @@
 // ignore_for_file: non_constant_identifier_names
 import 'package:hive/hive.dart';
-import 'package:vault/Data/Model/base_content_model.dart';
+import 'package:vault/data/model/base_content_model.dart';
 
-part 'serie_model.g.dart';
+part 'auto_generated/serie_model.g.dart';
 
 @HiveType(typeId: 2)
 class SerieModel implements BaseContentModel {
@@ -97,11 +97,12 @@ class SerieModel implements BaseContentModel {
   }
 }
 
-String getImageURL(json) {
-  var imageUrl = json['poster_path'];
-
-  imageUrl = "https://image.tmdb.org/t/p/original/${imageUrl?.substring(1)}";
-  return imageUrl;
+String? getImageURL(json) {
+  final imageUrl = json['poster_path'];
+  if (imageUrl == null || imageUrl.toString().isEmpty) {
+    return null;
+  }
+  return "https://image.tmdb.org/t/p/original/${imageUrl.toString().substring(1)}";
 }
 
 List<dynamic> getImages(json) {

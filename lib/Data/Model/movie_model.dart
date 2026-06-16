@@ -1,8 +1,8 @@
 // ignore_for_file: non_constant_identifier_names
 import 'package:hive/hive.dart';
-import 'package:vault/Data/Model/base_content_model.dart';
+import 'package:vault/data/model/base_content_model.dart';
 
-part 'movie_model.g.dart';
+part 'auto_generated/movie_model.g.dart';
 
 @HiveType(typeId: 1)
 class MovieModel implements BaseContentModel {
@@ -60,6 +60,8 @@ class MovieModel implements BaseContentModel {
   List<dynamic>? images;
   @HiveField(23)
   dynamic providers;
+  @HiveField(24)
+  List<dynamic>? videos;
 
   MovieModel({
     this.adult,
@@ -89,6 +91,7 @@ class MovieModel implements BaseContentModel {
     this.total_pages,
     this.images,
     this.providers,
+    this.videos,
   });
 
   MovieModel.fromJson(Map<String, dynamic> json) {
@@ -110,9 +113,12 @@ class MovieModel implements BaseContentModel {
     vote_average = json['vote_average'];
     // spoken_languages = json['spoken_languages'];
     credits = json['credits'];
+    cast = json['credits']?['cast'];
+    crew = json['credits']?['crew'];
     original_language = json['original_language'];
     images = getImages(json);
     providers = getProviders(json);
+    videos = getVideos(json);
   }
 }
 
@@ -123,10 +129,12 @@ String getBackgroundImageURL(json) {
   return backgroundImageUrl;
 }
 
-String getImageURL(json) {
-  var imageUrl = json['poster_path'];
-  imageUrl = "https://image.tmdb.org/t/p/original/${imageUrl?.substring(1)}";
-  return imageUrl;
+String? getImageURL(json) {
+  final imageUrl = json['poster_path'];
+  if (imageUrl == null || imageUrl.toString().isEmpty) {
+    return null;
+  }
+  return "https://image.tmdb.org/t/p/original/${imageUrl.toString().substring(1)}";
 }
 
 List<dynamic> getImages(json) {
@@ -142,5 +150,13 @@ dynamic getProviders(json) {
     return <Set>{};
   } else {
     return json['watch/providers']['results'];
+  }
+}
+
+List<dynamic> getVideos(json) {
+  if (json['videos'] == null) {
+    return [];
+  } else {
+    return json['videos']['results'] ?? [];
   }
 }

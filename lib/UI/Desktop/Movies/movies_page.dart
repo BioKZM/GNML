@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:vault/Helper/theme_helper.dart';
 import 'package:vault/Logic/moviepage_logic.dart';
-import 'package:vault/UI/Desktop/Details/movie_detail_page.dart';
-import 'package:vault/Widgets/content_builder.dart';
-import 'package:vault/Widgets/content_section.dart';
-import 'package:vault/Widgets/generic_content_card.dart';
+import 'package:vault/ui/Desktop/Details/movie_detail_page.dart';
+import 'package:vault/ui/widgets/content_builder.dart';
+import 'package:vault/ui/widgets/content_section.dart';
+import 'package:vault/ui/widgets/explore_hero_section.dart';
+import 'package:vault/ui/widgets/generic_content_card.dart';
 import 'package:provider/provider.dart';
 
 class MoviesPage extends StatefulWidget {
@@ -50,14 +51,14 @@ class _MoviesPageState extends State<MoviesPage>
       body: SingleChildScrollView(
         child: Column(
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                IconButton(
-                  onPressed: () => setState(() {}),
-                  icon: const Icon(Icons.refresh),
-                ),
-              ],
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: ExploreHeroSection(
+                future: MoviePageLogic().getPopularMovies(),
+                themeColor: themeColor,
+                label: 'Movie',
+                detailPageBuilder: (item) => MovieDetailPage(movieID: item.id!),
+              ),
             ),
             _buildSection(
               "Popular Movies",

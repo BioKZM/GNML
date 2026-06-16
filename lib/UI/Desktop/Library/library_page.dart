@@ -6,23 +6,26 @@ import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:vault/Data/Model/anime_model.dart';
-import 'package:vault/Data/Model/game_model.dart';
-import 'package:vault/Data/Model/library_item_model.dart';
-import 'package:vault/Data/Model/movie_model.dart';
-import 'package:vault/Data/Model/user_library.dart';
+import 'package:vault/data/model/anime_model.dart';
+// import 'package:vault/data/model/anime_model.dart';
+import 'package:vault/data/model/game_model.dart';
+import 'package:vault/data/model/library_item_model.dart';
+import 'package:vault/data/model/movie_model.dart';
+import 'package:vault/data/model/user_library.dart';
 import 'package:vault/Helper/rating_helper.dart';
 import 'package:vault/Helper/theme_helper.dart';
 import 'package:vault/Logic/animepage_logic.dart';
 import 'package:vault/Logic/gamepage_logic.dart';
 import 'package:vault/Logic/moviepage_logic.dart';
-import 'package:vault/UI/Desktop/Details/actors_detail_page.dart';
-import 'package:vault/UI/Desktop/Details/books_detail_page.dart';
-import 'package:vault/UI/Desktop/Details/anime_detail_page.dart';
-import 'package:vault/UI/Desktop/Details/game_detail_page.dart';
-import 'package:vault/UI/Desktop/Details/movie_detail_page.dart';
-import 'package:vault/UI/Desktop/Details/serie_detail_page.dart';
-import 'package:vault/Widgets/generic_content_card.dart';
+import 'package:vault/Logic/seriespage_logic.dart';
+import 'package:vault/ui/Desktop/Details/actors_detail_page.dart';
+import 'package:vault/ui/Desktop/Details/books_detail_page.dart';
+import 'package:vault/ui/Desktop/Details/anime_detail_page.dart';
+import 'package:vault/ui/Desktop/Details/game_detail_page.dart';
+import 'package:vault/ui/Desktop/Details/movie_detail_page.dart';
+import 'package:vault/ui/Desktop/Details/serie_detail_page.dart';
+import 'package:vault/data/model/serie_model.dart';
+import 'package:vault/ui/widgets/generic_content_card.dart';
 import 'package:provider/provider.dart';
 import 'package:vault/Providers/library_provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -32,22 +35,28 @@ import 'package:hive/hive.dart';
 enum Sort { atoz, ztoa }
 
 class LibraryPage extends StatefulWidget {
-  const LibraryPage({super.key});
+  final String initialFolder;
+
+  const LibraryPage({
+    super.key,
+    this.initialFolder = 'library',
+  });
 
   @override
   State<LibraryPage> createState() => _LibraryPageState();
 }
 
 class _LibraryPageState extends State<LibraryPage>
-    with AutomaticKeepAliveClientMixin {
+    with AutomaticKeepAliveClientMixin, SingleTickerProviderStateMixin {
   Sort buttonSort = Sort.atoz;
-  ContentType? filterType;
   bool isGroupedView = true;
   String folderView = 'library';
   final PageController _heroPageController = PageController();
   int _currentHeroIndex = 0;
   Timer? _heroTimer;
   List<_FlatLibraryItem>? _cachedHeroItems;
+  late final AnimationController _dnaFlowController;
+  final Map<String, Future<_HeroPresentation>> _heroPresentationFutures = {};
 
   @override
   bool get wantKeepAlive => true;
@@ -55,8 +64,24 @@ class _LibraryPageState extends State<LibraryPage>
   @override
   void initState() {
     super.initState();
+    folderView = widget.initialFolder;
+    _dnaFlowController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 10),
+    )..repeat(reverse: true);
     // Start timer for hero slideshow
     _startHeroTimer();
+  }
+
+  @override
+  void didUpdateWidget(covariant LibraryPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialFolder != widget.initialFolder &&
+        folderView != widget.initialFolder) {
+      setState(() {
+        folderView = widget.initialFolder;
+      });
+    }
   }
 
   Future<void> _updateDetailsForHeroItem(_FlatLibraryItem flatItem) async {
@@ -115,6 +140,168 @@ class _LibraryPageState extends State<LibraryPage>
     }
   }
 
+  Future<_HeroPresentation> _getHeroPresentation(
+      LibraryItemModel item, ContentType type) {
+    final key = '${type.name}_${item.id ?? 'missing'}';
+    return _heroPresentationFutures.putIfAbsent(
+      key,
+      () => _buildHeroPresentation(item, type),
+    );
+  }
+
+  Future<_HeroPresentation> _buildHeroPresentation(
+      LibraryItemModel item, ContentType type) async {
+    await _ensureHeroContentCached(item, type);
+    final box = Hive.box('content_cache');
+    final id = item.id;
+    if (id == null) {
+      return const _HeroPresentation(
+        scoreLabel: '-',
+        description: 'Explore this title in your library.',
+      );
+    }
+
+    switch (type) {
+      case ContentType.games:
+        final cached = box.get('game_details_$id');
+        if (cached is GameModel) {
+          final score = RatingHelper.getScore(cached);
+          final summary = cached.summary?.trim();
+          final storyline = cached.storyline?.trim();
+          return _HeroPresentation(
+            scoreLabel: score > 0 ? score.ceil().toString() : '-',
+            description: (summary != null && summary.isNotEmpty)
+                ? summary
+                : (storyline != null && storyline.isNotEmpty)
+                    ? storyline
+                    : 'Explore this title in your library.',
+          );
+        }
+        break;
+      case ContentType.movies:
+        final cached = box.get('movie_details_$id');
+        if (cached is MovieModel) {
+          final score = RatingHelper.getScore(cached);
+          final overview = cached.overview?.trim();
+          return _HeroPresentation(
+            scoreLabel: score > 0 ? score.ceil().toString() : '-',
+            description: (overview != null && overview.isNotEmpty)
+                ? overview
+                : 'Explore this title in your library.',
+          );
+        }
+        break;
+      case ContentType.series:
+        final cached = box.get('serie_details_$id');
+        if (cached is SerieModel) {
+          final score = RatingHelper.getScore(cached);
+          final overview = cached.overview?.trim();
+          return _HeroPresentation(
+            scoreLabel: score > 0 ? score.ceil().toString() : '-',
+            description: (overview != null && overview.isNotEmpty)
+                ? overview
+                : 'Explore this title in your library.',
+          );
+        }
+        break;
+      case ContentType.anime:
+        final cached = box.get('anime_details_$id');
+        if (cached is AnimeModel) {
+          final synopsis = cached.synopsis?.trim();
+          return _HeroPresentation(
+            scoreLabel:
+                cached.score != null ? cached.score!.toStringAsFixed(1) : '-',
+            description: (synopsis != null && synopsis.isNotEmpty)
+                ? synopsis
+                : 'Explore this title in your library.',
+          );
+        }
+        break;
+      case ContentType.books:
+      case ContentType.actors:
+        break;
+    }
+
+    return const _HeroPresentation(
+      scoreLabel: '-',
+      description: 'Explore this title in your library.',
+    );
+  }
+
+  Future<void> _ensureHeroContentCached(
+      LibraryItemModel item, ContentType type) async {
+    final box = Hive.box('content_cache');
+    final id = item.id;
+    if (id == null) return;
+
+    switch (type) {
+      case ContentType.games:
+        if (box.get('game_details_$id') is! GameModel) {
+          await GamePageLogic().getGameDetails(id);
+        }
+        break;
+      case ContentType.movies:
+        if (box.get('movie_details_$id') is! MovieModel) {
+          await MoviePageLogic().getMovieDetails(id);
+        }
+        break;
+      case ContentType.series:
+        if (box.get('serie_details_$id') is! SerieModel) {
+          await SeriesPageLogic().getSerieDetails(id);
+        }
+        break;
+      case ContentType.anime:
+        if (box.get('anime_details_$id') is! AnimeModel) {
+          await AnimePageLogic().getAnimeDetails(id);
+        }
+        break;
+      case ContentType.books:
+      case ContentType.actors:
+        break;
+    }
+  }
+
+  String _getHeroScoreLabel(_FlatLibraryItem flatItem) {
+    final box = Hive.box('content_cache');
+    final id = flatItem.raw['id'];
+    if (id == null) return '-';
+
+    switch (flatItem.type) {
+      case ContentType.games:
+        final cached = box.get('game_details_$id');
+        if (cached is GameModel) {
+          final score = RatingHelper.getScore(cached);
+          return score > 0 ? score.ceil().toString() : '-';
+        }
+        break;
+      case ContentType.movies:
+        final cached = box.get('movie_details_$id');
+        if (cached is MovieModel) {
+          final score = RatingHelper.getScore(cached);
+          return score > 0 ? score.ceil().toString() : '-';
+        }
+        break;
+      case ContentType.series:
+        final cached = box.get('serie_details_$id');
+        if (cached is SerieModel) {
+          final score = RatingHelper.getScore(cached);
+          return score > 0 ? score.ceil().toString() : '-';
+        }
+        break;
+      case ContentType.anime:
+        final cached = box.get('anime_details_$id');
+        if (cached is AnimeModel && cached.score != null) {
+          return cached.score!.toStringAsFixed(1);
+        }
+        break;
+      case ContentType.books:
+      case ContentType.actors:
+        break;
+    }
+
+    return '-';
+  }
+
   void _startHeroTimer() {
     _heroTimer?.cancel();
     _heroTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
@@ -136,6 +323,7 @@ class _LibraryPageState extends State<LibraryPage>
   void dispose() {
     _heroTimer?.cancel();
     _heroPageController.dispose();
+    _dnaFlowController.dispose();
     super.dispose();
   }
 
@@ -143,7 +331,7 @@ class _LibraryPageState extends State<LibraryPage>
     return Skeletonizer(
       enabled: true,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+        padding: const EdgeInsets.symmetric(horizontal: 40.0, vertical: 24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -240,7 +428,7 @@ class _LibraryPageState extends State<LibraryPage>
     final primaryColor = Color(themeColor);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: const Color.fromARGB(255, 9, 9, 9),
       body: Consumer<LibraryProvider>(
         builder: (context, libraryProvider, child) {
           if (libraryProvider.isLoading) {
@@ -257,12 +445,10 @@ class _LibraryPageState extends State<LibraryPage>
           final allItems = _buildFlattenedItems(library);
           final visibleItems = _applyFilter(allItems);
 
-          if (_cachedHeroItems == null && visibleItems.isNotEmpty) {
+          if (_cachedHeroItems == null && allItems.isNotEmpty) {
             final random = Random();
-            final itemsCopy = List<_FlatLibraryItem>.from(visibleItems.where(
-                (e) =>
-                    e.type != ContentType.books &&
-                    e.type != ContentType.actors));
+            final itemsCopy = List<_FlatLibraryItem>.from(allItems.where((e) =>
+                e.type != ContentType.books && e.type != ContentType.actors));
             if (itemsCopy.isNotEmpty) {
               itemsCopy.shuffle(random);
               _cachedHeroItems = itemsCopy.take(3).toList();
@@ -280,28 +466,15 @@ class _LibraryPageState extends State<LibraryPage>
 
           return SingleChildScrollView(
             padding:
-                const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+                const EdgeInsets.symmetric(horizontal: 40.0, vertical: 24.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                heroItems.isNotEmpty
-                    ? _buildHeroSection(heroItems, primaryColor)
-                    : _buildExploreHeroSection(primaryColor),
+                _buildDnaOnlyPanel(allItems, primaryColor),
                 const SizedBox(height: 32),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    // Row(
-                    //   children: [
-                    //     Text(
-                    //       "Library",
-                    //       style: GoogleFonts.orbitron(
-                    //           fontWeight: FontWeight.bold,
-                    //           fontSize: 32,
-                    //           color: Colors.white),
-                    //     ),
-                    //   ],
-                    // ),
                     Row(
                       children: [
                         IconButton(
@@ -332,8 +505,6 @@ class _LibraryPageState extends State<LibraryPage>
                     )
                   ],
                 ),
-                const SizedBox(height: 16),
-                _buildFolderChips(libraryProvider, themeColor),
                 const SizedBox(height: 24),
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
@@ -353,64 +524,51 @@ class _LibraryPageState extends State<LibraryPage>
     );
   }
 
-  Widget _buildFolderChips(LibraryProvider libraryProvider, int themeColor) {
-    final folders = <String>[
-      'library',
-      'favorites',
-      'completed',
-      'backlog',
-      ...libraryProvider.customFolders,
-    ];
-
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: folders.map((folder) {
-        final selected = folderView == folder;
-        return ChoiceChip(
-          label: Text(folder),
-          selected: selected,
-          onSelected: (value) {
-            if (!value) return;
-            setState(() {
-              folderView = folder;
-              _cachedHeroItems = null;
-              _currentHeroIndex = 0;
-            });
-          },
-          selectedColor: Color(themeColor),
-          backgroundColor: const Color(0xFF2A2A2A),
-          labelStyle: TextStyle(
-            color: selected ? Colors.white : Colors.white70,
-            fontSize: 11,
-            fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
-          ),
-        );
-      }).toList(),
-    );
-  }
-
   Future<String> _getHeroDescription(
       LibraryItemModel item, ContentType type) async {
     final box = Hive.box('content_cache');
-    final cacheKey = '${type.name}_${item.id}_description';
-
-    if (box.containsKey(cacheKey)) {
-      return box.get(cacheKey) as String;
+    final id = item.id;
+    if (id == null) {
+      return "Explore this title in your library.";
     }
 
-    // If not in cache, return default or fetch (mocking fetch for now as we don't have direct API access here easily without refactor)
-    // In a real scenario, you would call your API service here.
-    // For now, we'll return a placeholder and save it to simulate the process.
-    String description =
-        "Explore this title in your library. Dive into the details and enjoy.";
+    switch (type) {
+      case ContentType.games:
+        final cached = box.get('game_details_$id');
+        if (cached is GameModel) {
+          final summary = cached.summary?.trim();
+          final storyline = cached.storyline?.trim();
+          if (summary != null && summary.isNotEmpty) return summary;
+          if (storyline != null && storyline.isNotEmpty) return storyline;
+        }
+        break;
+      case ContentType.movies:
+        final cached = box.get('movie_details_$id');
+        if (cached is MovieModel) {
+          final overview = cached.overview?.trim();
+          if (overview != null && overview.isNotEmpty) return overview;
+        }
+        break;
+      case ContentType.series:
+        final cached = box.get('serie_details_$id');
+        if (cached is SerieModel) {
+          final overview = cached.overview?.trim();
+          if (overview != null && overview.isNotEmpty) return overview;
+        }
+        break;
+      case ContentType.anime:
+        final cached = box.get('anime_details_$id');
+        if (cached is AnimeModel) {
+          final synopsis = cached.synopsis?.trim();
+          if (synopsis != null && synopsis.isNotEmpty) return synopsis;
+        }
+        break;
+      case ContentType.books:
+      case ContentType.actors:
+        break;
+    }
 
-    // Simulating fetching 'real' description if possible or just using a better default
-    // If you have the description in the item model (e.g. from the list view), use it.
-    // But often list items have truncated or no description.
-
-    await box.put(cacheKey, description);
-    return description;
+    return "Explore this title in your library.";
   }
 
   Future<List<_ExploreSlide>> _fetchExploreSlides() async {
@@ -742,7 +900,8 @@ class _LibraryPageState extends State<LibraryPage>
     );
   }
 
-  Widget _buildHeroSection(List<_FlatLibraryItem> items, Color primaryColor) {
+  Widget _buildHeroSection(List<_FlatLibraryItem> items,
+      List<_FlatLibraryItem> allItems, Color primaryColor) {
     return SizedBox(
       height: 400,
       child: Row(
@@ -770,6 +929,8 @@ class _LibraryPageState extends State<LibraryPage>
                         imageURL: flatItem.raw['imageURL']?.toString(),
                       );
                       final detailPage = _getDetailPage(flatItem.type, item.id);
+                      final heroPresentation =
+                          _getHeroPresentation(item, flatItem.type);
 
                       return GestureDetector(
                         onTap: () {
@@ -842,42 +1003,111 @@ class _LibraryPageState extends State<LibraryPage>
                                         ),
                                       ),
                                       const SizedBox(height: 12),
-                                      Text(
-                                        item.title ?? "Unknown Title",
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: GoogleFonts.orbitron(
-                                          color: Colors.white,
-                                          fontSize: 32,
-                                          fontWeight: FontWeight.w900,
-                                          shadows: [
-                                            Shadow(
-                                              color: Colors.black
-                                                  .withValues(alpha: 0.8),
-                                              blurRadius: 10,
-                                              offset: const Offset(0, 4),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(height: 12),
-                                      FutureBuilder<String>(
-                                          future: _getHeroDescription(
-                                              item, flatItem.type),
-                                          builder: (context, snapshot) {
-                                            final desc = snapshot.data ??
-                                                "Explore this title in your library.";
-                                            return Text(
-                                              desc,
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: GoogleFonts.inter(
-                                                color: Colors.white70,
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w300,
+                                      FutureBuilder<_HeroPresentation>(
+                                        future: heroPresentation,
+                                        builder: (context, snapshot) {
+                                          final hero = snapshot.data ??
+                                              const _HeroPresentation(
+                                                scoreLabel: '-',
+                                                description:
+                                                    'Explore this title in your library.',
+                                              );
+                                          return Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Expanded(
+                                                    child: Text(
+                                                      item.title ??
+                                                          "Unknown Title",
+                                                      maxLines: 2,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                      style:
+                                                          GoogleFonts.orbitron(
+                                                        color: Colors.white,
+                                                        fontSize: 32,
+                                                        fontWeight:
+                                                            FontWeight.w900,
+                                                        shadows: [
+                                                          Shadow(
+                                                            color: Colors.black
+                                                                .withValues(
+                                                                    alpha: 0.8),
+                                                            blurRadius: 10,
+                                                            offset:
+                                                                const Offset(
+                                                                    0, 4),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  if (hero.scoreLabel !=
+                                                      '-') ...[
+                                                    const SizedBox(width: 12),
+                                                    Container(
+                                                      padding: const EdgeInsets
+                                                          .symmetric(
+                                                        horizontal: 10,
+                                                        vertical: 8,
+                                                      ),
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.black
+                                                            .withValues(
+                                                                alpha: 0.32),
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(12),
+                                                      ),
+                                                      child: Row(
+                                                        mainAxisSize:
+                                                            MainAxisSize.min,
+                                                        children: [
+                                                          Icon(
+                                                            Icons.star_rounded,
+                                                            size: 14,
+                                                            color: primaryColor,
+                                                          ),
+                                                          const SizedBox(
+                                                              width: 6),
+                                                          Text(
+                                                            hero.scoreLabel,
+                                                            style: GoogleFonts
+                                                                .inter(
+                                                              color:
+                                                                  Colors.white,
+                                                              fontSize: 12,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w800,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ],
                                               ),
-                                            );
-                                          }),
+                                              const SizedBox(height: 12),
+                                              Text(
+                                                hero.description,
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: GoogleFonts.inter(
+                                                  color: Colors.white70,
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w300,
+                                                ),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -955,77 +1185,101 @@ class _LibraryPageState extends State<LibraryPage>
           Expanded(
             flex: 4,
             child: Container(
-              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: const Color(0xFF1A1A1A),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    const Color(0xFF1A1A1A),
+                    primaryColor.withValues(alpha: 0.12),
+                    const Color(0xFF151515),
+                  ],
+                ),
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Quick Stats",
-                    style: GoogleFonts.inter(
-                      color: Colors.white54,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: AnimatedBuilder(
+                        animation: _dnaFlowController,
+                        builder: (context, child) {
+                          final t = _dnaFlowController.value;
+                          return Stack(
+                            children: [
+                              Transform.translate(
+                                offset: Offset(-80 + (t * 140), 0),
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Container(
+                                    width: 220,
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.centerLeft,
+                                        end: Alignment.centerRight,
+                                        colors: [
+                                          primaryColor.withValues(alpha: 0.0),
+                                          primaryColor.withValues(alpha: 0.10),
+                                          primaryColor.withValues(alpha: 0.0),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                top: -30 + (t * 40),
+                                right: 30,
+                                child: Container(
+                                  width: 120,
+                                  height: 120,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: primaryColor.withValues(alpha: 0.08),
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                bottom: -40,
+                                left: 40 + (t * 30),
+                                child: Container(
+                                  width: 150,
+                                  height: 150,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: primaryColor.withValues(alpha: 0.05),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  Consumer<LibraryProvider>(
-                    builder: (context, libraryProvider, child) {
-                      final title = libraryProvider.detailsTitle ?? '-';
-                      final description =
-                          libraryProvider.detailsDescription ?? '-';
-                      final scoreText = libraryProvider.detailsScoreText ?? '-';
-                      final dateText = libraryProvider.detailsDateText ?? '-';
-
-                      return Column(
+                    Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            title,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                            "Collection DNA",
                             style: GoogleFonts.inter(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
+                              color: Colors.white54,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1,
                             ),
                           ),
-                          const SizedBox(height: 12),
-                          _buildGridStatItem(
-                            "Score",
-                            scoreText,
-                            FontAwesomeIcons.star,
-                            Colors.amber,
-                          ),
-                          const SizedBox(height: 12),
-                          _buildGridStatItem(
-                            "Date",
-                            dateText,
-                            FontAwesomeIcons.calendar,
-                            Colors.blueAccent,
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            description,
-                            maxLines: 6,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.inter(
-                              color: Colors.white70,
-                              fontSize: 12,
-                              height: 1.4,
-                            ),
-                          ),
+                          const SizedBox(height: 24),
+                          _buildRecommendationPanel(allItems),
                         ],
-                      );
-                    },
-                  ),
-                ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -1036,51 +1290,424 @@ class _LibraryPageState extends State<LibraryPage>
 
   Widget _buildGridStatItem(
       String label, String value, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, color: color, size: 16),
+    return Row(
+      children: [
+        Container(
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.04),
+            borderRadius: BorderRadius.circular(10),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  value,
-                  style: GoogleFonts.inter(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+          child: Icon(icon, color: color.withValues(alpha: 0.9), size: 16),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  color: Colors.white54,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
                 ),
-                Text(
-                  label,
-                  style: GoogleFonts.inter(
-                    color: Colors.white54,
-                    fontSize: 11,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 3),
+              Text(
+                value,
+                style: GoogleFonts.inter(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDnaOnlyPanel(
+      List<_FlatLibraryItem> allItems, Color primaryColor) {
+    return SizedBox(
+      height: 320,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              const Color(0xFF1A1A1A),
+              primaryColor.withValues(alpha: 0.12),
+              const Color(0xFF151515),
+            ],
+          ),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: AnimatedBuilder(
+                  animation: _dnaFlowController,
+                  builder: (context, child) {
+                    final t = _dnaFlowController.value;
+                    return Stack(
+                      children: [
+                        Transform.translate(
+                          offset: Offset(-80 + (t * 140), 0),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Container(
+                              width: 220,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.centerLeft,
+                                  end: Alignment.centerRight,
+                                  colors: [
+                                    primaryColor.withValues(alpha: 0.0),
+                                    primaryColor.withValues(alpha: 0.10),
+                                    primaryColor.withValues(alpha: 0.0),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          top: -30 + (t * 40),
+                          right: 30,
+                          child: Container(
+                            width: 120,
+                            height: 120,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: primaryColor.withValues(alpha: 0.08),
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          bottom: -40,
+                          left: 40 + (t * 30),
+                          child: Container(
+                            width: 150,
+                            height: 150,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: primaryColor.withValues(alpha: 0.05),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Collection DNA",
+                      style: GoogleFonts.inter(
+                        color: Colors.white54,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    _buildRecommendationPanel(allItems),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
+  }
+
+  Widget _buildRecommendationPanel(List<_FlatLibraryItem> items) {
+    final insight = _buildLibraryInsight(items);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          insight.title,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: GoogleFonts.inter(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: insight.dnaTags.map((tag) {
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white.withValues(alpha: 0.06),
+                    insight.primaryColor.withValues(alpha: 0.16),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(
+                  color: insight.primaryColor.withValues(alpha: 0.24),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: insight.primaryColor.withValues(alpha: 0.10),
+                    blurRadius: 18,
+                    spreadRadius: -8,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 18,
+                    height: 18,
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Icon(
+                      insight.primaryIcon,
+                      size: 10,
+                      color: insight.primaryColor.withValues(alpha: 0.88),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    tag,
+                    style: GoogleFonts.inter(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 14),
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.04),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+          ),
+          child: Column(
+            children: [
+              _buildGridStatItem(
+                "Strongest lane",
+                insight.primaryLabel,
+                insight.primaryIcon,
+                insight.primaryColor,
+              ),
+              const SizedBox(height: 10),
+              Divider(color: Colors.white.withValues(alpha: 0.05), height: 1),
+              const SizedBox(height: 10),
+              _buildGridStatItem(
+                "Collection shape",
+                insight.secondaryLabel,
+                FluentIcons.sparkle_24_regular,
+                Colors.grey.shade300,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  _LibraryInsight _buildLibraryInsight(List<_FlatLibraryItem> items) {
+    if (items.isEmpty) {
+      return const _LibraryInsight(
+        title: 'Your collection DNA will show up here',
+        primaryLabel: 'Empty shelf',
+        secondaryLabel: 'Waiting for your first adds',
+        primaryIcon: FontAwesomeIcons.compass,
+        primaryColor: Colors.white54,
+        dnaTags: ['No signal yet'],
+      );
+    }
+
+    final tokens = _extractTasteTokens(items);
+    final topTokens = tokens.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final counts = <ContentType, int>{};
+    for (final item in items) {
+      counts[item.type] = (counts[item.type] ?? 0) + 1;
+    }
+
+    final dominant = counts.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final primary = dominant.first.key;
+    final primaryCount = dominant.first.value;
+    final total = items.length;
+    final dnaTags = topTokens.take(3).map((entry) => entry.key).toList();
+
+    String collectionShape;
+    if (total < 10) {
+      collectionShape = 'Early-stage and flexible';
+    } else if (dominant.length > 1 &&
+        dominant[0].value - dominant[1].value <= 2) {
+      collectionShape = 'Balanced across formats';
+    } else {
+      collectionShape = 'Leaning hard into one lane';
+    }
+
+    switch (primary) {
+      case ContentType.games:
+        return _LibraryInsight(
+          title: 'Your shelf screams playable worlds',
+          primaryLabel: '$primaryCount games leading the mood',
+          secondaryLabel: collectionShape,
+          primaryIcon: FontAwesomeIcons.gamepad,
+          primaryColor: Colors.lightBlueAccent,
+          dnaTags: dnaTags.isEmpty
+              ? ['Games', 'Interactive', 'Collection']
+              : dnaTags,
+        );
+      case ContentType.movies:
+        return _LibraryInsight(
+          title: 'This shelf leans cinematic as hell',
+          primaryLabel: '$primaryCount films in rotation',
+          secondaryLabel: collectionShape,
+          primaryIcon: FontAwesomeIcons.film,
+          primaryColor: Colors.redAccent,
+          dnaTags: dnaTags.isEmpty
+              ? ['Cinema', 'Poster-heavy', 'Discovery']
+              : dnaTags,
+        );
+      case ContentType.series:
+        return _LibraryInsight(
+          title: 'You collect long arcs, not quick hits',
+          primaryLabel: '$primaryCount series shaping the feed',
+          secondaryLabel: collectionShape,
+          primaryIcon: FontAwesomeIcons.tv,
+          primaryColor: Colors.orangeAccent,
+          dnaTags: dnaTags.isEmpty
+              ? ['Series', 'Bingeable', 'Progression']
+              : dnaTags,
+        );
+      case ContentType.anime:
+        return _LibraryInsight(
+          title: 'Anime is steering the whole aesthetic',
+          primaryLabel: '$primaryCount anime entries up front',
+          secondaryLabel: collectionShape,
+          primaryIcon: FontAwesomeIcons.dragon,
+          primaryColor: Colors.pinkAccent,
+          dnaTags:
+              dnaTags.isEmpty ? ['Anime', 'Character-driven', 'Mood'] : dnaTags,
+        );
+      case ContentType.books:
+        return _LibraryInsight(
+          title: 'This shelf reads slower and deeper',
+          primaryLabel: '$primaryCount books at the core',
+          secondaryLabel: collectionShape,
+          primaryIcon: FontAwesomeIcons.book,
+          primaryColor: Colors.greenAccent,
+          dnaTags: dnaTags.isEmpty ? ['Books', 'Long-form', 'Depth'] : dnaTags,
+        );
+      case ContentType.actors:
+        return _LibraryInsight(
+          title: 'You collect around people and credits',
+          primaryLabel: '$primaryCount cast-driven entries',
+          secondaryLabel: collectionShape,
+          primaryIcon: FontAwesomeIcons.user,
+          primaryColor: Colors.purpleAccent,
+          dnaTags:
+              dnaTags.isEmpty ? ['People', 'Credits', 'Connections'] : dnaTags,
+        );
+    }
+  }
+
+  Map<String, int> _extractTasteTokens(List<_FlatLibraryItem> items) {
+    final box = Hive.box('content_cache');
+    final tokens = <String, int>{};
+
+    void addToken(String? value) {
+      final normalized = value?.trim();
+      if (normalized == null || normalized.isEmpty) return;
+      tokens[normalized] = (tokens[normalized] ?? 0) + 1;
+    }
+
+    for (final item in items) {
+      final id = item.raw['id'];
+      if (id == null) continue;
+
+      switch (item.type) {
+        case ContentType.games:
+          final cached = box.get('game_details_$id');
+          if (cached is GameModel) {
+            for (final genre in cached.genres ?? const []) {
+              addToken(
+                  genre is Map ? genre['name']?.toString() : genre?.toString());
+            }
+            for (final theme in cached.themes ?? const []) {
+              addToken(
+                  theme is Map ? theme['name']?.toString() : theme?.toString());
+            }
+          }
+          break;
+        case ContentType.movies:
+          final cached = box.get('movie_details_$id');
+          if (cached is MovieModel) {
+            for (final genre in cached.genres ?? const []) {
+              addToken(
+                  genre is Map ? genre['name']?.toString() : genre?.toString());
+            }
+          }
+          break;
+        case ContentType.series:
+          final cached = box.get('serie_details_$id');
+          if (cached is SerieModel) {
+            for (final genre in cached.genres ?? const []) {
+              addToken(
+                  genre is Map ? genre['name']?.toString() : genre?.toString());
+            }
+          }
+          break;
+        case ContentType.anime:
+          final cached = box.get('anime_details_$id');
+          if (cached is AnimeModel) {
+            for (final genre in cached.genres ?? const []) {
+              addToken(genre?.toString());
+            }
+          }
+          break;
+        case ContentType.books:
+          addToken('Books');
+          break;
+        case ContentType.actors:
+          addToken('Cast');
+          break;
+      }
+    }
+
+    return tokens;
   }
 
   String _typePrefix(ContentType type) {
@@ -1390,9 +2017,7 @@ class _LibraryPageState extends State<LibraryPage>
       final folder = e.raw['folder']?.toString() ?? 'library';
       return folder == folderView;
     }).toList();
-
-    if (filterType == null) return folderFiltered;
-    return folderFiltered.where((e) => e.type == filterType).toList();
+    return folderFiltered;
   }
 }
 
@@ -1416,5 +2041,33 @@ class _ExploreSlide {
     required this.description,
     required this.imageUrl,
     required this.onOpen,
+  });
+}
+
+class _LibraryInsight {
+  final String title;
+  final String primaryLabel;
+  final String secondaryLabel;
+  final IconData primaryIcon;
+  final Color primaryColor;
+  final List<String> dnaTags;
+
+  const _LibraryInsight({
+    required this.title,
+    required this.primaryLabel,
+    required this.secondaryLabel,
+    required this.primaryIcon,
+    required this.primaryColor,
+    required this.dnaTags,
+  });
+}
+
+class _HeroPresentation {
+  final String scoreLabel;
+  final String description;
+
+  const _HeroPresentation({
+    required this.scoreLabel,
+    required this.description,
   });
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -5,25 +6,23 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
-import 'package:vault/Data/Model/anime_model.dart';
-import 'package:vault/Data/Model/game_model.dart';
-import 'package:vault/Data/Model/movie_model.dart';
-import 'package:vault/Data/Model/serie_model.dart';
+import 'package:vault/data/model/anime_model.dart';
+import 'package:vault/data/model/game_model.dart';
+import 'package:vault/data/model/movie_model.dart';
+import 'package:vault/data/model/serie_model.dart';
+import 'package:vault/Helper/content_type.dart';
 import 'package:vault/Helper/theme_helper.dart';
+import 'package:vault/Helper/rating_helper.dart';
 import 'package:vault/Logic/animepage_logic.dart';
 import 'package:vault/Logic/gamepage_logic.dart';
 import 'package:vault/Logic/moviepage_logic.dart';
 import 'package:vault/Logic/seriespage_logic.dart';
-import 'package:vault/UI/Desktop/Animes/animes_page.dart';
-import 'package:vault/UI/Desktop/Details/anime_detail_page.dart';
-import 'package:vault/UI/Desktop/Details/game_detail_page.dart';
-import 'package:vault/UI/Desktop/Details/movie_detail_page.dart';
-import 'package:vault/UI/Desktop/Details/serie_detail_page.dart';
-import 'package:vault/UI/Desktop/Games/games_page.dart';
-import 'package:vault/UI/Desktop/Movies/movies_page.dart';
-import 'package:vault/UI/Desktop/Series/series_page.dart';
-// import 'package:vault/UI/Views/library_view.dart';
-import 'package:vault/Widgets/generic_content_card.dart';
+import 'package:vault/Providers/library_provider.dart';
+import 'package:vault/ui/Desktop/Details/anime_detail_page.dart';
+import 'package:vault/ui/Desktop/Details/game_detail_page.dart';
+import 'package:vault/ui/Desktop/Details/movie_detail_page.dart';
+import 'package:vault/ui/Desktop/Details/serie_detail_page.dart';
+import 'package:vault/ui/widgets/home_showcase_widgets.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -41,96 +40,188 @@ class _HomeViewState extends State<HomeView> {
     _future = _fetch();
   }
 
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
   Future<_HomePayload> _fetch() async {
+    final gameLogic = GamePageLogic();
+    final movieLogic = MoviePageLogic();
+    final seriesLogic = SeriesPageLogic();
+    final animeLogic = AnimePageLogic();
     final results = await Future.wait([
-      GamePageLogic().getPopularGameList('popularRightNow'),
-      MoviePageLogic().getPopularMovies(),
-      SeriesPageLogic().getPopularSeries(),
-      AnimePageLogic().getTopAnimes(limit: 25),
+      gameLogic.getPopularGameList('popularRightNow').catchError((e) {
+        debugPrint('Games fetch error: $e');
+        return <GameModel>[];
+      }),
+      movieLogic.getPopularMovies().catchError((e) {
+        debugPrint('Movies fetch error: $e');
+        return <MovieModel>[];
+      }),
+      seriesLogic.getPopularSeries().catchError((e) {
+        debugPrint('Series fetch error: $e');
+        return <SerieModel>[];
+      }),
+      animeLogic.getTopAnimes(limit: 15).catchError((e) {
+        debugPrint('Animes fetch error: $e');
+        return <AnimeModel>[];
+      }),
     ]);
 
     final games = (results[0] as List).whereType<GameModel>().toList();
     final movies = (results[1] as List).whereType<MovieModel>().toList();
     final series = (results[2] as List).whereType<SerieModel>().toList();
     final animes = (results[3] as List).whereType<AnimeModel>().toList();
-
     final rng = Random(DateTime.now().millisecondsSinceEpoch);
 
-    _HeroTileData pickHero() {
-      final buckets = <List<_HeroTileData>>[
-        games
-            .where((e) => e.id != null)
-            .map((e) => _HeroTileData(
-                  title: e.name ?? 'Game',
-                  subtitle: 'Trending Game',
-                  imageUrl: e.imageURL,
-                  onOpen: () => GameDetailPage(gameID: e.id!),
-                ))
-            .toList(),
-        movies
-            .where((e) => e.id != null)
-            .map((e) => _HeroTileData(
-                  title: e.title ?? 'Movie',
-                  subtitle: 'Popular Movie',
-                  imageUrl: e.imageURL,
-                  onOpen: () => MovieDetailPage(movieID: e.id!),
-                ))
-            .toList(),
-        series
-            .where((e) => e.id != null)
-            .map((e) => _HeroTileData(
-                  title: e.title ?? 'Series',
-                  subtitle: 'Popular Series',
-                  imageUrl: e.imageURL,
-                  onOpen: () => SerieDetailPage(serieID: e.id!),
-                ))
-            .toList(),
-        animes
-            .where((e) => e.id != null)
-            .map((e) => _HeroTileData(
-                  title: e.title ?? 'Anime',
-                  subtitle: 'Top Anime',
-                  imageUrl: e.imageURL,
-                  onOpen: () => AnimeDetailPage(animeId: e.id!),
-                ))
-            .toList(),
-      ];
-
-      final nonEmpty = buckets.where((b) => b.isNotEmpty).toList();
-      if (nonEmpty.isEmpty) {
-        return _HeroTileData(
-          title: "Vault'u Keşfet",
-          subtitle: 'Trending',
-          imageUrl: null,
-          onOpen: null,
-        );
-      }
-      final bucket = nonEmpty[rng.nextInt(nonEmpty.length)];
-      return bucket[rng.nextInt(bucket.length)];
-    }
-
-    final hero1 = pickHero();
-    var hero2 = pickHero();
-    int guard = 0;
-    while (hero2.title == hero1.title && guard < 5) {
-      hero2 = pickHero();
-      guard += 1;
-    }
-
-    List<T> pick7<T>(List<T> list) {
-      if (list.length <= 7) return list;
+    List<T> pickN<T>(List<T> list, int count) {
+      if (list.length <= count) return list;
       final copy = List<T>.from(list);
       copy.shuffle(rng);
-      return copy.take(7).toList();
+      return copy.take(count).toList();
+    }
+
+    Future<GameModel> hydrateGameSummary(GameModel game) async {
+      if (game.id == null) return game;
+      final summary = game.summary?.trim() ?? '';
+      if (summary.isNotEmpty) return game;
+
+      try {
+        final details = await gameLogic.getGameDetails(game.id!);
+        if (details.isNotEmpty &&
+            (details.first.summary?.trim().isNotEmpty ?? false)) {
+          game.summary = details.first.summary?.trim();
+        }
+      } catch (_) {}
+
+      return game;
+    }
+
+    Future<HomeHeroSlideData?> buildGameSlide(GameModel game) async {
+      if (game.id == null) return null;
+      String description = game.summary?.trim() ?? '';
+      if (description.isEmpty) {
+        try {
+          final details = await gameLogic.getGameDetails(game.id!);
+          if (details.isNotEmpty) {
+            description = details.first.summary?.trim() ?? '';
+          }
+        } catch (_) {}
+      }
+      if (description.isEmpty) return null;
+      return HomeHeroSlideData(
+        title: game.name ?? 'Game',
+        subtitle: 'Popular Game',
+        category: HomeHeroCategory.games,
+        imageUrl: game.imageURL,
+        description: description,
+        gameAggregatedRating: game.aggregated_rating,
+        gameRating: game.rating,
+        onOpen: () => GameDetailPage(gameID: game.id!),
+      );
+    }
+
+    HomeHeroSlideData? buildMovieSlide(MovieModel movie) {
+      if (movie.id == null) return null;
+      final description = movie.overview?.trim() ?? '';
+      if (description.isEmpty) return null;
+      return HomeHeroSlideData(
+        title: movie.title ?? 'Movie',
+        subtitle: 'Popular Movie',
+        category: HomeHeroCategory.movies,
+        imageUrl: movie.imageURL,
+        description: description,
+        onOpen: () => MovieDetailPage(movieID: movie.id!),
+      );
+    }
+
+    HomeHeroSlideData? buildSeriesSlide(SerieModel show) {
+      if (show.id == null) return null;
+      final description = show.overview?.trim() ?? '';
+      if (description.isEmpty) return null;
+      return HomeHeroSlideData(
+        title: show.title ?? 'Series',
+        subtitle: 'Popular Series',
+        category: HomeHeroCategory.series,
+        imageUrl: show.imageURL,
+        description: description,
+        onOpen: () => SerieDetailPage(serieID: show.id!),
+      );
+    }
+
+    HomeHeroSlideData? buildAnimeSlide(AnimeModel anime) {
+      if (anime.id == null) return null;
+      final description = anime.synopsis?.trim() ?? '';
+      if (description.isEmpty) return null;
+      return HomeHeroSlideData(
+        title: anime.title ?? 'Anime',
+        subtitle: 'Top Anime',
+        category: HomeHeroCategory.animes,
+        imageUrl: anime.imageURL,
+        description: description,
+        onOpen: () => AnimeDetailPage(animeId: anime.id!),
+      );
+    }
+
+    final heroCandidates = <HomeHeroSlideData>[];
+
+    for (final game in games.take(5)) {
+      final slide = await buildGameSlide(game);
+      if (slide != null) {
+        heroCandidates.add(slide);
+      }
+    }
+
+    for (final movie in movies.take(5)) {
+      final slide = buildMovieSlide(movie);
+      if (slide != null) {
+        heroCandidates.add(slide);
+      }
+    }
+
+    for (final show in series.take(5)) {
+      final slide = buildSeriesSlide(show);
+      if (slide != null) {
+        heroCandidates.add(slide);
+      }
+    }
+
+    for (final anime in animes.take(5)) {
+      final slide = buildAnimeSlide(anime);
+      if (slide != null) {
+        heroCandidates.add(slide);
+      }
+    }
+
+    final heroSlides = heroCandidates;
+
+    if (heroSlides.isEmpty) {
+      heroSlides.add(
+        const HomeHeroSlideData(
+          title: "Vault'u Kesfet",
+          subtitle: 'Trending',
+          category: HomeHeroCategory.games,
+          imageUrl: null,
+          description: 'Oyun, film, dizi ve anime koleksiyonunu tek yerde tut.',
+          gameAggregatedRating: null,
+          gameRating: null,
+          onOpen: null,
+        ),
+      );
+    }
+
+    final selectedGames = pickN(games, 15);
+    for (var i = 0; i < selectedGames.length; i++) {
+      selectedGames[i] = await hydrateGameSummary(selectedGames[i]);
     }
 
     return _HomePayload(
-      heroLeft: hero1,
-      heroRight: hero2,
-      games: pick7(games),
-      movies: pick7(movies),
-      series: pick7(series),
-      animes: pick7(animes),
+      heroSlides: heroSlides,
+      games: selectedGames,
+      movies: pickN(movies, 15),
+      series: pickN(series, 15),
+      animes: pickN(animes, 15),
     );
   }
 
@@ -144,138 +235,89 @@ class _HomeViewState extends State<HomeView> {
       builder: (context, snapshot) {
         final data = snapshot.data;
         final loading = snapshot.connectionState != ConnectionState.done;
-
-        final payload = data ??
-            _HomePayload.skeleton(
-              heroLeft: _HeroTileData.skeleton(),
-              heroRight: _HeroTileData.skeleton(),
-            );
+        final payload = data ?? _HomePayload.skeleton();
 
         return Skeletonizer(
           enabled: loading,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+            padding: const EdgeInsets.symmetric(horizontal: 44, vertical: 24),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1360),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: _HeroTile(
-                        primaryColor: primaryColor,
-                        data: payload.heroLeft,
+                    HomeHeroSlider(
+                      primaryColor: primaryColor,
+                      slides: payload.heroSlides,
+                    ),
+                    const SizedBox(height: 34),
+                    _GamesSectionHeader(
+                      primaryColor: primaryColor,
+                    ),
+                    const SizedBox(height: 16),
+                    _GamesShowcaseSection(
+                      items: payload.games,
+                      themeColor: themeColor,
+                    ),
+                    const SizedBox(height: 32),
+                    MediaSectionBlock<MovieModel>(
+                      primaryColor: primaryColor,
+                      sectionTop: 'POPULAR',
+                      sectionBottom: 'MOVIES',
+                      items: payload.movies,
+                      getTitle: (item) => item.title ?? 'Movie',
+                      getDescription: (item) =>
+                          item.overview?.trim().isNotEmpty == true
+                              ? item.overview!.trim()
+                              : (item.tagline?.trim().isNotEmpty == true
+                                  ? item.tagline!.trim()
+                                  : 'No summary available yet.'),
+                      getImageUrl: (item) => item.imageURL,
+                      getScore: (item) => RatingHelper.getScore(item),
+                      buildDetailPage: (item) => MovieDetailPage(
+                        movieID: item.id ?? 0,
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _HeroTile(
-                        primaryColor: primaryColor,
-                        data: payload.heroRight,
+                    const SizedBox(height: 32),
+                    MediaSectionBlock<SerieModel>(
+                      primaryColor: primaryColor,
+                      sectionTop: 'POPULAR',
+                      sectionBottom: 'SERIES',
+                      items: payload.series,
+                      getTitle: (item) => item.name ?? 'Series',
+                      getDescription: (item) =>
+                          item.overview?.trim().isNotEmpty == true
+                              ? item.overview!.trim()
+                              : (item.tagline?.trim().isNotEmpty == true
+                                  ? item.tagline!.trim()
+                                  : 'No summary available yet.'),
+                      getImageUrl: (item) => item.imageURL,
+                      getScore: (item) => RatingHelper.getScore(item),
+                      buildDetailPage: (item) => SerieDetailPage(
+                        serieID: item.id ?? 0,
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    MediaSectionBlock<AnimeModel>(
+                      primaryColor: primaryColor,
+                      sectionTop: 'TOP',
+                      sectionBottom: 'ANIMES',
+                      items: payload.animes,
+                      getTitle: (item) => item.title ?? 'Anime',
+                      getDescription: (item) =>
+                          item.synopsis?.trim().isNotEmpty == true
+                              ? item.synopsis!.trim()
+                              : 'No summary available yet.',
+                      getImageUrl: (item) => item.imageURL,
+                      getScore: (item) => RatingHelper.getScore(item),
+                      buildDetailPage: (item) => AnimeDetailPage(
+                        animeId: item.id ?? 0,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 18),
-                _SectionHeader(
-                  leftText: "Games",
-                  rightText: "See All Games",
-                  onSeeAll: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const GamesPage()),
-                    );
-                  },
-                  primaryColor: primaryColor,
-                ),
-                const SizedBox(height: 8),
-                _HorizontalRow(
-                  themeColor: themeColor,
-                  children: payload.games
-                      .map((e) => GenericContentCard(
-                            item: e,
-                            type: ContentType.games,
-                            themeColor: themeColor,
-                            detailPage: GameDetailPage(gameID: e.id ?? 0),
-                          ))
-                      .toList(),
-                ),
-                const SizedBox(height: 18),
-                _SectionHeader(
-                  leftText: "Movies",
-                  rightText: "See All Movies",
-                  onSeeAll: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const MoviesPage()),
-                    );
-                  },
-                  primaryColor: primaryColor,
-                ),
-                const SizedBox(height: 8),
-                _HorizontalRow(
-                  themeColor: themeColor,
-                  children: payload.movies
-                      .map((e) => GenericContentCard(
-                            item: e,
-                            type: ContentType.movies,
-                            themeColor: themeColor,
-                            detailPage: MovieDetailPage(movieID: e.id ?? 0),
-                          ))
-                      .toList(),
-                ),
-                const SizedBox(height: 18),
-                _SectionHeader(
-                  leftText: "Series",
-                  rightText: "See All Series",
-                  onSeeAll: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const SeriesPage()),
-                    );
-                  },
-                  primaryColor: primaryColor,
-                ),
-                const SizedBox(height: 8),
-                _HorizontalRow(
-                  themeColor: themeColor,
-                  children: payload.series
-                      .map((e) => GenericContentCard(
-                            item: e,
-                            type: ContentType.series,
-                            themeColor: themeColor,
-                            detailPage: SerieDetailPage(serieID: e.id ?? 0),
-                          ))
-                      .toList(),
-                ),
-                const SizedBox(height: 18),
-                _SectionHeader(
-                  leftText: "Animes",
-                  rightText: "See All Animes",
-                  onSeeAll: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const AnimesPage()),
-                    );
-                  },
-                  primaryColor: primaryColor,
-                ),
-                const SizedBox(height: 8),
-                _HorizontalRow(
-                  themeColor: themeColor,
-                  children: payload.animes
-                      .map((e) => GenericContentCard(
-                            item: e,
-                            type: ContentType.anime,
-                            themeColor: themeColor,
-                            detailPage: AnimeDetailPage(animeId: e.id ?? 0),
-                          ))
-                      .toList(),
-                ),
-              ],
+              ),
             ),
           ),
         );
@@ -284,280 +326,727 @@ class _HomeViewState extends State<HomeView> {
   }
 }
 
-class _TopNavButton extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final Color primaryColor;
-  final VoidCallback onTap;
+class _GamesShowcaseSection extends StatelessWidget {
+  final List<GameModel> items;
+  final int themeColor;
 
-  const _TopNavButton({
-    required this.label,
-    required this.selected,
-    required this.primaryColor,
-    required this.onTap,
+  const _GamesShowcaseSection({
+    required this.items,
+    required this.themeColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected
-              ? primaryColor.withValues(alpha: 0.14)
-              : Colors.white.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: selected
-                ? primaryColor.withValues(alpha: 0.35)
-                : Colors.white.withValues(alpha: 0.08),
+    final row1 = items.take(5).toList();
+    final row2 = items.skip(5).take(5).toList();
+    final row3 = items.skip(10).take(5).toList();
+    final rng = Random(items.fold<int>(0, (sum, item) => sum + (item.id ?? 0)));
+
+    Set<int> pickWideIndexes(int itemCount, int wideCount) {
+      final pool = List<int>.generate(itemCount, (index) => index);
+      pool.shuffle(rng);
+      return pool.take(min(wideCount, itemCount)).toSet();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (row1.isNotEmpty)
+          _GamesMosaicRow(
+            items: row1,
+            themeColor: themeColor,
+            wideIndexes: pickWideIndexes(row1.length, 1),
           ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: selected ? primaryColor : Colors.white70,
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
+        if (row1.isNotEmpty) const SizedBox(height: 22),
+        if (row2.isNotEmpty)
+          _GamesMosaicRow(
+            items: row2,
+            themeColor: themeColor,
+            wideIndexes: pickWideIndexes(row2.length, 1),
           ),
-        ),
-      ),
+        if (row2.isNotEmpty) const SizedBox(height: 22),
+        if (row3.isNotEmpty)
+          _GamesMosaicRow(
+            items: row3,
+            themeColor: themeColor,
+            wideIndexes: pickWideIndexes(row3.length, 1),
+          ),
+      ],
     );
   }
 }
 
-class _SectionHeader extends StatelessWidget {
-  final String leftText;
-  final String rightText;
-  final VoidCallback onSeeAll;
+class _GamesSectionHeader extends StatelessWidget {
   final Color primaryColor;
 
-  const _SectionHeader({
-    required this.leftText,
-    required this.rightText,
-    required this.onSeeAll,
+  const _GamesSectionHeader({
     required this.primaryColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          leftText,
-          style: GoogleFonts.inter(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          "|",
-          style: TextStyle(color: Colors.white.withValues(alpha: 0.25)),
-        ),
-        const SizedBox(width: 8),
-        TextButton(
-          onPressed: onSeeAll,
-          child: Text(
-            rightText,
-            style: TextStyle(
-              color: primaryColor,
-              fontWeight: FontWeight.w700,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              'POPULAR',
+              style: GoogleFonts.orbitron(
+                color: Colors.white,
+                fontSize: 32,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 2.0,
+              ),
             ),
-          ),
+            const SizedBox(width: 12),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 2),
+              child: Text(
+                'GAMES',
+                style: GoogleFonts.orbitron(
+                  color: primaryColor,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 2.1,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          height: 1,
+          color: Colors.white.withValues(alpha: 0.08),
         ),
       ],
     );
   }
 }
 
-class _HorizontalRow extends StatelessWidget {
+class _GamesMosaicRow extends StatelessWidget {
+  final List<GameModel> items;
   final int themeColor;
-  final List<Widget> children;
+  final Set<int> wideIndexes;
 
-  const _HorizontalRow({
+  const _GamesMosaicRow({
+    required this.items,
     required this.themeColor,
-    required this.children,
+    required this.wideIndexes,
   });
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 260,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        children: children,
+    const gap = 12.0;
+    const hoverRoom = 8.0;
+    const posterAspectRatio = 220 / 330;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final totalUnits = items.length + wideIndexes.length;
+        final totalGap = gap * (items.length - 1);
+        final unitWidth =
+            (constraints.maxWidth - totalGap - (hoverRoom * 2)) / totalUnits;
+        final posterWidth = unitWidth;
+        final posterHeight = posterWidth / posterAspectRatio;
+
+        return SizedBox(
+          height: posterHeight + 8,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: hoverRoom),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: List.generate(items.length, (index) {
+                final item = items[index];
+                final isWide = wideIndexes.contains(index);
+                final width = isWide ? unitWidth * 2 : unitWidth;
+
+                return Padding(
+                  padding: EdgeInsets.only(
+                      right: index == items.length - 1 ? 0 : gap),
+                  child: SizedBox(
+                    width: width,
+                    height: posterHeight,
+                    child: isWide
+                        ? _FeaturedGameCard(
+                            item: item,
+                            themeColor: Color(themeColor),
+                          )
+                        : _GamePosterMiniCard(
+                            item: item,
+                          ),
+                  ),
+                );
+              }),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+Map<String, dynamic> _buildGameLibraryMap(GameModel item, String folder) {
+  return {
+    'id': item.id,
+    'type': 'game',
+    'title': item.name,
+    'imageURL': item.imageURL,
+    'folder': folder,
+  };
+}
+
+void _showHomeGameContextMenu({
+  required BuildContext context,
+  required RelativeRect position,
+  required LibraryProvider provider,
+  required GameModel item,
+  required bool inLibrary,
+}) {
+  final id = item.id;
+  showMenu<void>(
+    context: context,
+    position: position,
+    color: const Color(0xFF141414),
+    elevation: 18,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
+      side: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+    ),
+    items: <PopupMenuEntry<void>>[
+      PopupMenuItem<void>(
+        height: 42,
+        onTap: () {
+          if (id == null) return;
+          provider.addOrUpdateItem(
+            type: ContentType.games,
+            id: id,
+            title: item.name,
+            imageUrl: item.imageURL,
+            folder: 'favorites',
+            extra: _buildGameLibraryMap(item, 'favorites'),
+          );
+        },
+        child: const Text('Move to Favorites'),
+      ),
+      PopupMenuItem<void>(
+        height: 42,
+        onTap: () {
+          if (id == null) return;
+          provider.addOrUpdateItem(
+            type: ContentType.games,
+            id: id,
+            title: item.name,
+            imageUrl: item.imageURL,
+            folder: 'completed',
+            extra: _buildGameLibraryMap(item, 'completed'),
+          );
+        },
+        child: const Text('Move to Completed'),
+      ),
+      PopupMenuItem<void>(
+        height: 42,
+        onTap: () {
+          if (id == null) return;
+          provider.addOrUpdateItem(
+            type: ContentType.games,
+            id: id,
+            title: item.name,
+            imageUrl: item.imageURL,
+            folder: 'backlog',
+            extra: _buildGameLibraryMap(item, 'backlog'),
+          );
+        },
+        child: const Text('Move to Backlog'),
+      ),
+      if (provider.customFolders.isNotEmpty) const PopupMenuDivider(),
+      for (final folder in provider.customFolders)
+        PopupMenuItem<void>(
+          height: 42,
+          onTap: () {
+            if (id == null) return;
+            provider.addOrUpdateItem(
+              type: ContentType.games,
+              id: id,
+              title: item.name,
+              imageUrl: item.imageURL,
+              folder: folder,
+              extra: _buildGameLibraryMap(item, folder),
+            );
+          },
+          child: Text('Move to $folder'),
+        ),
+      if (inLibrary) ...[
+        const PopupMenuDivider(),
+        PopupMenuItem<void>(
+          height: 42,
+          onTap: () {
+            if (id == null) return;
+            provider.removeFromLibrary(ContentType.games, id);
+          },
+          child: const Text(
+            'Remove from Library',
+            style: TextStyle(color: Colors.redAccent),
+          ),
+        ),
+      ],
+    ],
+  );
+}
+
+class _HomeGameMenuButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _HomeGameMenuButton({
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Ink(
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.58),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.26),
+                blurRadius: 18,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: const Icon(
+            Icons.more_horiz_rounded,
+            color: Colors.white,
+            size: 18,
+          ),
+        ),
       ),
     );
   }
 }
 
-class _HeroTileData {
-  final String title;
-  final String subtitle;
-  final String? imageUrl;
-  final Widget Function()? onOpen;
+class _GamePosterMiniCard extends StatefulWidget {
+  final GameModel item;
 
-  _HeroTileData({
-    required this.title,
-    required this.subtitle,
-    required this.imageUrl,
-    required this.onOpen,
-  });
-
-  static _HeroTileData skeleton() => _HeroTileData(
-        title: 'Loading',
-        subtitle: 'Trending',
-        imageUrl: null,
-        onOpen: null,
-      );
-}
-
-class _HeroTile extends StatelessWidget {
-  final Color primaryColor;
-  final _HeroTileData data;
-
-  const _HeroTile({
-    required this.primaryColor,
-    required this.data,
+  const _GamePosterMiniCard({
+    required this.item,
   });
 
   @override
+  State<_GamePosterMiniCard> createState() => _GamePosterMiniCardState();
+}
+
+class _GamePosterMiniCardState extends State<_GamePosterMiniCard> {
+  bool _hovering = false;
+  final GlobalKey _menuAnchorKey = GlobalKey();
+
+  void _openMenu(LibraryProvider provider, bool inLibrary) {
+    final renderObject =
+        _menuAnchorKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderObject == null) return;
+    final overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox?;
+    if (overlay == null) return;
+    final offset = renderObject.localToGlobal(Offset.zero, ancestor: overlay);
+    _showHomeGameContextMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        offset.dx,
+        offset.dy + renderObject.size.height + 6,
+        offset.dx + renderObject.size.width,
+        offset.dy,
+      ),
+      provider: provider,
+      item: widget.item,
+      inLibrary: inLibrary,
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: data.onOpen == null
-          ? null
-          : () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => data.onOpen!()),
-              );
-            },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        height: 180,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-          color: Colors.white.withValues(alpha: 0.04),
-          image: data.imageUrl == null
-              ? null
-              : DecorationImage(
-                  image: CachedNetworkImageProvider(data.imageUrl!),
-                  fit: BoxFit.cover,
-                  alignment: Alignment.topCenter,
+    final item = widget.item;
+    final score = RatingHelper.getScore(item);
+    final hasRating = score > 0;
+    final ratingColor =
+        hasRating ? RatingHelper.getRatingColor(score) : Colors.white54;
+    return Consumer<LibraryProvider>(
+      builder: (context, provider, child) {
+        final inLibrary = item.id == null
+            ? false
+            : provider.isInLibrary(ContentType.games, item.id!);
+
+        return MouseRegion(
+          onEnter: (_) => setState(() => _hovering = true),
+          onExit: (_) => setState(() => _hovering = false),
+          cursor: SystemMouseCursors.click,
+          child: AnimatedScale(
+            scale: _hovering ? 1.015 : 1.0,
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOutCubic,
+            child: GestureDetector(
+              onTap: item.id == null
+                  ? null
+                  : () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              GameDetailPage(gameID: item.id!),
+                        ),
+                      );
+                    },
+              onLongPressStart: (_) => _openMenu(provider, inLibrary),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  color: const Color(0xFF181818),
                 ),
-        ),
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            gradient: LinearGradient(
-              colors: [
-                const Color(0xFF121212).withValues(alpha: 0.08),
-                const Color(0xFF121212).withValues(alpha: 0.92),
-              ],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    if (item.imageURL != null)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(14),
+                        child: Image(
+                          image: CachedNetworkImageProvider(item.imageURL!),
+                          fit: BoxFit.cover,
+                          alignment: Alignment.topCenter,
+                        ),
+                      ),
+                    if (_hovering)
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(14),
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.black.withValues(alpha: 0.08),
+                              Colors.black.withValues(alpha: 0.40),
+                              Colors.black.withValues(alpha: 0.82),
+                            ],
+                          ),
+                        ),
+                      ),
+                    if (_hovering)
+                      Positioned(
+                        top: 10,
+                        right: 10,
+                        child: KeyedSubtree(
+                          key: _menuAnchorKey,
+                          child: _HomeGameMenuButton(
+                            onTap: () => _openMenu(provider, inLibrary),
+                          ),
+                        ),
+                      ),
+                    if (_hovering)
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: Container(
+                          height: 74,
+                          decoration: BoxDecoration(
+                            borderRadius: const BorderRadius.vertical(
+                              bottom: Radius.circular(14),
+                            ),
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.black.withValues(alpha: 0.10),
+                                Colors.black.withValues(alpha: 0.70),
+                                Colors.black.withValues(alpha: 0.95),
+                              ],
+                            ),
+                          ),
+                          padding: const EdgeInsets.fromLTRB(12, 14, 12, 12),
+                          child: Align(
+                            alignment: Alignment.bottomLeft,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Text(
+                                  item.name ?? 'Game',
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.inter(
+                                    color: Colors.white,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.star_rounded,
+                                      size: 14,
+                                      color: ratingColor,
+                                    ),
+                                    if (!hasRating) ...[
+                                      const SizedBox(width: 2),
+                                      Icon(
+                                        Icons.question_mark_rounded,
+                                        size: 12,
+                                        color: ratingColor,
+                                      ),
+                                    ],
+                                    if (hasRating) ...[
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '${score.ceil()}',
+                                        style: GoogleFonts.inter(
+                                          color: ratingColor,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: primaryColor.withValues(alpha: 0.16),
-                  borderRadius: BorderRadius.circular(12),
-                  border:
-                      Border.all(color: primaryColor.withValues(alpha: 0.35)),
-                ),
-                child: Text(
-                  data.subtitle.toUpperCase(),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: primaryColor,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-              ),
-              const Spacer(),
-              Text(
-                data.title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
-                  height: 1.1,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Row(
-                children: [
-                  Icon(
-                    data.onOpen == null
-                        ? Icons.hourglass_empty
-                        : Icons.play_arrow,
-                    color: Colors.white.withValues(alpha: 0.8),
-                    size: 16,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    data.onOpen == null ? "Loading" : "Open",
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.75),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              )
-            ],
-          ),
-        ),
+        );
+      },
+    );
+  }
+}
+
+class _FeaturedGameCard extends StatefulWidget {
+  final GameModel item;
+  final Color themeColor;
+
+  const _FeaturedGameCard({
+    required this.item,
+    required this.themeColor,
+  });
+
+  @override
+  State<_FeaturedGameCard> createState() => _FeaturedGameCardState();
+}
+
+class _FeaturedGameCardState extends State<_FeaturedGameCard> {
+  bool _hovering = false;
+  final GlobalKey _menuAnchorKey = GlobalKey();
+
+  void _openMenu(LibraryProvider provider, bool inLibrary) {
+    final renderObject =
+        _menuAnchorKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderObject == null) return;
+    final overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox?;
+    if (overlay == null) return;
+    final offset = renderObject.localToGlobal(Offset.zero, ancestor: overlay);
+    _showHomeGameContextMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        offset.dx,
+        offset.dy + renderObject.size.height + 6,
+        offset.dx + renderObject.size.width,
+        offset.dy,
       ),
+      provider: provider,
+      item: widget.item,
+      inLibrary: inLibrary,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final item = widget.item;
+    final score = RatingHelper.getScore(item);
+    final hasRating = score > 0;
+    final ratingColor =
+        hasRating ? RatingHelper.getRatingColor(score) : Colors.white54;
+    return Consumer<LibraryProvider>(
+      builder: (context, provider, child) {
+        final inLibrary = item.id == null
+            ? false
+            : provider.isInLibrary(ContentType.games, item.id!);
+
+        return MouseRegion(
+          onEnter: (_) => setState(() => _hovering = true),
+          onExit: (_) => setState(() => _hovering = false),
+          cursor: SystemMouseCursors.click,
+          child: AnimatedScale(
+            scale: _hovering ? 1.015 : 1.0,
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOutCubic,
+            child: GestureDetector(
+              onTap: item.id == null
+                  ? null
+                  : () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              GameDetailPage(gameID: item.id!),
+                        ),
+                      );
+                    },
+              onLongPressStart: (_) => _openMenu(provider, inLibrary),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  color: const Color(0xFF181818),
+                ),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    if (item.imageURL != null)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Image(
+                          image: CachedNetworkImageProvider(item.imageURL!),
+                          fit: BoxFit.cover,
+                          alignment: Alignment.topCenter,
+                        ),
+                      ),
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.black.withValues(alpha: 0.08),
+                            Colors.black.withValues(alpha: 0.78),
+                            Colors.black.withValues(alpha: 0.96),
+                          ],
+                        ),
+                      ),
+                    ),
+                    if (_hovering)
+                      Positioned(
+                        top: 12,
+                        right: 12,
+                        child: KeyedSubtree(
+                          key: _menuAnchorKey,
+                          child: _HomeGameMenuButton(
+                            onTap: () => _openMenu(provider, inLibrary),
+                          ),
+                        ),
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.all(18),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Text(
+                            item.name ?? 'Game',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.orbitron(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.star_rounded,
+                                size: 14,
+                                color: ratingColor,
+                              ),
+                              if (!hasRating) ...[
+                                const SizedBox(width: 2),
+                                Icon(
+                                  Icons.question_mark_rounded,
+                                  size: 12,
+                                  color: ratingColor,
+                                ),
+                              ],
+                              if (hasRating) ...[
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${score.ceil()}',
+                                  style: GoogleFonts.inter(
+                                    color: ratingColor,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            item.summary?.trim().isNotEmpty == true
+                                ? item.summary!.trim()
+                                : (item.storyline?.trim().isNotEmpty == true
+                                    ? item.storyline!.trim()
+                                    : 'No summary available yet.'),
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.inter(
+                              color: Colors.white70,
+                              fontSize: 12,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
 
 class _HomePayload {
-  final _HeroTileData heroLeft;
-  final _HeroTileData heroRight;
+  final List<HomeHeroSlideData> heroSlides;
   final List<GameModel> games;
   final List<MovieModel> movies;
   final List<SerieModel> series;
   final List<AnimeModel> animes;
 
   _HomePayload({
-    required this.heroLeft,
-    required this.heroRight,
+    required this.heroSlides,
     required this.games,
     required this.movies,
     required this.series,
     required this.animes,
   });
 
-  factory _HomePayload.skeleton({
-    required _HeroTileData heroLeft,
-    required _HeroTileData heroRight,
-  }) {
+  factory _HomePayload.skeleton() {
     final dummyGame = GameModel(id: 0, name: 'Loading', url: null);
     final dummyMovie = MovieModel(id: 0, title: 'Loading', imageURL: null);
     final dummySerie = SerieModel(id: 0, name: 'Loading', imageURL: null);
     final dummyAnime = AnimeModel(id: 0, title: 'Loading', imageURL: null);
     return _HomePayload(
-      heroLeft: heroLeft,
-      heroRight: heroRight,
-      games: List.generate(7, (_) => dummyGame),
+      heroSlides: List.generate(5, (_) => HomeHeroSlideData.skeleton()),
+      games: List.generate(15, (_) => dummyGame),
       movies: List.generate(7, (_) => dummyMovie),
       series: List.generate(7, (_) => dummySerie),
       animes: List.generate(7, (_) => dummyAnime),

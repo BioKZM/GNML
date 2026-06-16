@@ -17,7 +17,7 @@ class ContentBuilder<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 200,
+      height: 390,
       width: double.infinity,
       child: FutureBuilder<List<T>>(
         future: future,
@@ -32,20 +32,21 @@ class ContentBuilder<T> extends StatelessWidget {
                 separatorBuilder: (context, index) => const SizedBox(width: 12),
                 itemBuilder: (context, index) {
                   return Container(
-                    width: 140,
+                    width: 220,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.06),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(18),
                       border: Border.all(
                           color: Colors.white.withValues(alpha: 0.08)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
+                        SizedBox(
+                          height: 300,
                           child: ClipRRect(
                             borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(12)),
+                                top: Radius.circular(18)),
                             child: Container(
                               color: Colors.white.withValues(alpha: 0.08),
                             ),

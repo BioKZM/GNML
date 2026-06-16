@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'game_model.dart';
+part of '../game_model.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator

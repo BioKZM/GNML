@@ -6,7 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:vault/Helper/auth.dart';
 import 'package:vault/Providers/library_provider.dart';
-import 'package:vault/UI/layout_scaffold.dart';
+import 'package:vault/ui/layout_scaffold.dart';
 import 'package:intl/intl.dart';
 
 class LoginPage extends StatefulWidget {
@@ -75,7 +75,7 @@ class _LoginPageState extends State<LoginPage> {
           await libraryProvider.init();
           if (!mounted) return;
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => LayoutScaffold()),
+            MaterialPageRoute(builder: (context) => const LayoutScaffold()),
           );
         }
       }
@@ -107,7 +107,7 @@ class _LoginPageState extends State<LoginPage> {
       await libraryProvider.init();
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => LayoutScaffold()),
+        MaterialPageRoute(builder: (context) => const LayoutScaffold()),
       );
     } on FirebaseAuthException catch (e) {
       setState(() => _errorMessage = e.message ?? "An error occurred");

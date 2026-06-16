@@ -1,6 +1,7 @@
 import 'dart:convert';
+import 'package:hive/hive.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:vault/Data/Model/movie_model.dart';
+import 'package:vault/data/model/movie_model.dart';
 import 'package:http/http.dart' as http;
 
 class MoviePageLogic {
@@ -132,15 +133,26 @@ class MoviePageLogic {
   }
 
   Future<List<MovieModel>> getMovieDetails(int movieID) async {
+    final box = Hive.box('content_cache');
+    final cacheKey = 'movie_details_$movieID';
+    final cached = box.get(cacheKey);
+    if (cached is MovieModel &&
+        cached.cast != null &&
+        cached.crew != null &&
+        cached.videos != null) {
+      return [cached];
+    }
+
     List<MovieModel> movieModelList = <MovieModel>[];
     await http.get(
         Uri.parse(
-            "https://api.themoviedb.org/3/movie/$movieID?api_key=$tmdbKey&append_to_response=credits,images,watch/providers"),
+            "https://api.themoviedb.org/3/movie/$movieID?api_key=$tmdbKey&append_to_response=credits,images,videos,watch/providers"),
         headers: {}).then((value) {
       var responseBody = jsonDecode(value.body);
       for (Map<String, dynamic> x in [responseBody]) {
         MovieModel movieModel = MovieModel.fromJson(x);
         movieModelList.add(movieModel);
+        box.put(cacheKey, movieModel);
       }
     });
     return movieModelList;

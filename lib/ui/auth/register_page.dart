@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:vault/Helper/auth.dart';
-import 'package:vault/UI/layout_scaffold.dart';
-import 'package:vault/Widgets/circularprogressindicator.dart';
+import 'package:vault/ui/layout_scaffold.dart';
+import 'package:vault/ui/widgets/circularprogressindicator.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -125,7 +125,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => LayoutScaffold(),
+                                  builder: (context) => const LayoutScaffold(),
                                 ),
                               );
                             }

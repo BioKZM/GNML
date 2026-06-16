@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+Color bestContrastOn(Color background) {
+  return background.computeLuminance() > 0.55 ? Colors.black : Colors.white;
+}
+
 class ThemeProvider extends ChangeNotifier {
   // final bool _isLightTheme = false;
   int _themeColor = const Color.fromARGB(255, 180, 0, 0).toARGB32();

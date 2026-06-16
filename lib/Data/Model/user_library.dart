@@ -1,5 +1,10 @@
 class UserLibrary {
-  static const int schemaVersion = 1;
+  static const int schemaVersion = 2;
+  static const Map<String, dynamic> defaultFolders = {
+    'favorites': {'type': 'default'},
+    'completed': {'type': 'default'},
+    'backlog': {'type': 'default'},
+  };
 
   final Map<String, dynamic> library;
   final List<String> customFolders;
@@ -28,8 +33,8 @@ class UserLibrary {
 
     final customFolders = <String>[];
     if (rawCustomFolders is List) {
-      for (final f in rawCustomFolders) {
-        final name = f?.toString().trim();
+      for (final folder in rawCustomFolders) {
+        final name = folder?.toString().trim();
         if (name == null || name.isEmpty) continue;
         customFolders.add(name);
       }
@@ -46,11 +51,7 @@ class UserLibrary {
       'schemaVersion': schemaVersion,
       'library': library,
       'customFolders': customFolders,
-      'folders': {
-        'favorites': {'type': 'default'},
-        'completed': {'type': 'default'},
-        'backlog': {'type': 'default'},
-      },
+      'folders': defaultFolders,
     };
   }
 }

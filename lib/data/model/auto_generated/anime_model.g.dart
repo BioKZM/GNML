@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'anime_model.dart';
+part of '../anime_model.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator

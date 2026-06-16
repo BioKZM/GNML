@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:vault/Data/Model/book_model.dart';
 import 'package:vault/Logic/bookspage_logic.dart';
 
 class BooksData {
@@ -25,65 +24,5 @@ class BooksData {
         style: const TextStyle(fontSize: 12),
       );
     }
-  }
-
-  void addToBooksList(List<dynamic> booksList, Map<String, dynamic> bookMap) {
-    booksList.add(bookMap);
-  }
-
-  void removeFromBooksList(List<dynamic> booksList, String bookID) {
-    booksList.removeWhere((element) => element['bookID'] == bookID);
-  }
-
-  void addLikesFromBooksList(
-      List<dynamic> booksList, String bookID, ValueNotifier<bool> isFavorite) {
-    for (var x in booksList) {
-      if (x['bookID'] == bookID) {
-        isFavorite.value = true;
-      }
-    }
-  }
-
-  void addFavoritesBooksList(
-      List<dynamic> booksList,
-      List<dynamic>? favoriteBooks,
-      int index,
-      ValueNotifier<bool> isFavorited) {
-    for (var x in favoriteBooks!) {
-      if (x['bookID'] == booksList[index]['bookID']) {
-        isFavorited.value = true;
-      }
-    }
-  }
-
-  void addFavoritesBooksListSearch(
-      List<dynamic> booksList,
-      List<dynamic>? favoriteBooks,
-      int index,
-      ValueNotifier<bool> isFavorited) {
-    for (var x in favoriteBooks!) {
-      if (x['bookID'] == booksList[index].id) {
-        isFavorited.value = true;
-      }
-    }
-  }
-
-  Map<String, dynamic> getBookMap(
-      String bookID, List<BookModel> data, int index) {
-    Map<String, dynamic> bookMap = {
-      "bookID": bookID,
-      "imageURL": data[index].imageURL.toString(),
-      "bookName": data[index].title,
-    };
-    return bookMap;
-  }
-
-  Map<String, dynamic> getBookMapLibrary(List<dynamic> booksList, int index) {
-    Map<String, dynamic> bookMap = {
-      "bookID": booksList[index]['bookID'],
-      "imageURL": booksList[index]['imageURL'],
-      "bookName": booksList[index]['bookName'],
-    };
-    return bookMap;
   }
 }

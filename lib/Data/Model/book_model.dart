@@ -1,8 +1,8 @@
 // ignore_for_file: non_constant_identifier_names
 import 'package:hive/hive.dart';
-import 'package:vault/Data/Model/base_content_model.dart';
+import 'package:vault/data/model/base_content_model.dart';
 
-part 'book_model.g.dart';
+part 'auto_generated/book_model.g.dart';
 
 @HiveType(typeId: 3)
 class BookModel implements BaseContentModel {

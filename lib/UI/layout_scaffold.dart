@@ -14,27 +14,27 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:vault/Helper/theme_helper.dart';
 import 'package:vault/Helper/ui_constants.dart';
-import 'package:vault/UI/Views/home_view.dart';
-import 'package:vault/UI/Desktop/User/profile_page.dart';
-import 'package:vault/UI/Desktop/Games/games_page.dart';
-import 'package:vault/UI/Desktop/Library/library_page.dart';
-import 'package:vault/UI/Desktop/Movies/movies_page.dart';
-import 'package:vault/UI/Desktop/Series/series_page.dart';
-import 'package:vault/UI/Desktop/User/settings_page.dart';
-import 'package:vault/UI/Desktop/Animes/animes_page.dart';
-import 'package:vault/Widgets/circularprogressindicator.dart';
+import 'package:vault/Providers/user_provider.dart';
+import 'package:vault/ui/Views/home_view.dart';
+import 'package:vault/ui/Desktop/User/profile_page.dart';
+import 'package:vault/ui/Desktop/Games/games_page.dart';
+import 'package:vault/ui/Desktop/Library/library_page.dart';
+import 'package:vault/ui/Desktop/Movies/movies_page.dart';
+import 'package:vault/ui/Desktop/Series/series_page.dart';
+import 'package:vault/ui/Desktop/User/settings_page.dart';
+import 'package:vault/ui/Desktop/Animes/animes_page.dart';
+import 'package:vault/ui/widgets/circularprogressindicator.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
-import 'package:updat/updat.dart';
 import 'package:http/http.dart' as http;
 import 'package:vault/Providers/library_provider.dart';
 import 'package:vault/Logic/animepage_logic.dart';
 import 'package:vault/Logic/gamepage_logic.dart';
 import 'package:vault/Logic/moviepage_logic.dart';
-import 'package:vault/UI/Desktop/Details/anime_detail_page.dart';
-import 'package:vault/UI/Desktop/Details/game_detail_page.dart';
-import 'package:vault/UI/Desktop/Details/movie_detail_page.dart';
-import 'package:vault/UI/Desktop/Details/serie_detail_page.dart';
+import 'package:vault/ui/Desktop/Details/anime_detail_page.dart';
+import 'package:vault/ui/Desktop/Details/game_detail_page.dart';
+import 'package:vault/ui/Desktop/Details/movie_detail_page.dart';
+import 'package:vault/ui/Desktop/Details/serie_detail_page.dart';
 
 class LayoutScaffold extends StatefulWidget {
   const LayoutScaffold({super.key});
@@ -45,11 +45,10 @@ class LayoutScaffold extends StatefulWidget {
 
 class _LayoutScaffoldState extends State<LayoutScaffold>
     with SingleTickerProviderStateMixin {
-  User? user = FirebaseAuth.instance.currentUser;
-  final _firestore = FirebaseFirestore.instance;
+  User? get user => FirebaseAuth.instance.currentUser;
+  FirebaseFirestore get _firestore => FirebaseFirestore.instance;
 
   late TabController _tabController;
-  final PageController _pageController = PageController(initialPage: 0);
   GlobalKey key = GlobalKey();
 
   final LayerLink _searchLayerLink = LayerLink();
@@ -57,12 +56,13 @@ class _LayoutScaffoldState extends State<LayoutScaffold>
   final FocusNode _searchFocusNode = FocusNode();
 
   bool _isLeftOpen = true;
-  bool _isRightOpen = true;
-  String _activeRightPanel = 'timeline';
+  bool _isRightOpen = false;
+  String _activeRightPanel = '';
+  String _selectedLibraryFolder = 'library';
 
   late Stream<DocumentSnapshot> _userStream;
-  late Future<_HeroCardData?> _exploreHeroFuture;
-  String? _backlogHeroKey;
+  // late Future<_HeroCardData?> _exploreHeroFuture;
+  // String? _backlogHeroKey;
 
   @override
   void initState() {
@@ -83,193 +83,195 @@ class _LayoutScaffoldState extends State<LayoutScaffold>
       }
     });
 
-    CollectionReference data = _firestore.collection('users');
-    _userStream = data.doc(user!.uid).snapshots();
-    _exploreHeroFuture = _fetchExploreHero();
+    // _userData = userBox.get('profile');
+    // final user = context.watch<UserProvider>().userData;
+
+    // CollectionReference data = _firestore.collection('users');
+    // _userStream = data.doc(user!.uid).snapshots();
+    // _exploreHeroFuture = _fetchExploreHero();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
-    _pageController.dispose();
     super.dispose();
   }
 
-  Future<_HeroCardData?> _fetchExploreHero() async {
-    Future<_HeroCardData?> tryAnime() async {
-      try {
-        final items = await AnimePageLogic().getTopAnimes(limit: 20);
-        if (items.isEmpty) return null;
-        final pick =
-            items[DateTime.now().millisecondsSinceEpoch % items.length];
-        if (pick.id == null) return null;
-        return _HeroCardData(
-          title: pick.title ?? 'Anime',
-          subtitle: 'Trending Anime',
-          imageUrl: pick.imageURL,
-          onOpen: () => AnimeDetailPage(animeId: pick.id!),
-        );
-      } catch (_) {
-        return null;
-      }
-    }
+  // Future<_HeroCardData?> _fetchExploreHero() async {
+  //   Future<_HeroCardData?> tryAnime() async {
+  //     try {
+  //       final items = await AnimePageLogic().getTopAnimes(limit: 20);
+  //       if (items.isEmpty) return null;
+  //       final pick =
+  //           items[DateTime.now().millisecondsSinceEpoch % items.length];
+  //       if (pick.id == null) return null;
+  //       return _HeroCardData(
+  //         title: pick.title ?? 'Anime',
+  //         subtitle: 'Trending Anime',
+  //         imageUrl: pick.imageURL,
+  //         onOpen: () => AnimeDetailPage(animeId: pick.id!),
+  //       );
+  //     } catch (_) {
+  //       return null;
+  //     }
+  //   }
 
-    Future<_HeroCardData?> tryGame() async {
-      try {
-        final items =
-            await GamePageLogic().getPopularGameList('popularRightNow');
-        if (items.isEmpty) return null;
-        final pick =
-            items[DateTime.now().millisecondsSinceEpoch % items.length];
-        if (pick.id == null) return null;
-        return _HeroCardData(
-          title: pick.name ?? 'Game',
-          subtitle: 'Trending Game',
-          imageUrl: pick.imageURL,
-          onOpen: () => GameDetailPage(gameID: pick.id!),
-        );
-      } catch (_) {
-        return null;
-      }
-    }
+  //   Future<_HeroCardData?> tryGame() async {
+  //     try {
+  //       final items =
+  //           await GamePageLogic().getPopularGameList('popularRightNow');
+  //       if (items.isEmpty) return null;
+  //       final pick =
+  //           items[DateTime.now().millisecondsSinceEpoch % items.length];
+  //       if (pick.id == null) return null;
+  //       return _HeroCardData(
+  //         title: pick.name ?? 'Game',
+  //         subtitle: 'Trending Game',
+  //         imageUrl: pick.imageURL,
+  //         onOpen: () => GameDetailPage(gameID: pick.id!),
+  //       );
+  //     } catch (_) {
+  //       return null;
+  //     }
+  //   }
 
-    Future<_HeroCardData?> tryMovie() async {
-      try {
-        final items = await MoviePageLogic().getPopularMovies();
-        if (items.isEmpty) return null;
-        final pick =
-            items[DateTime.now().millisecondsSinceEpoch % items.length];
-        if (pick.id == null) return null;
-        return _HeroCardData(
-          title: pick.title ?? 'Movie',
-          subtitle: 'Trending Movie',
-          imageUrl: pick.imageURL,
-          onOpen: () => MovieDetailPage(movieID: pick.id!),
-        );
-      } catch (_) {
-        return null;
-      }
-    }
+  //   Future<_HeroCardData?> tryMovie() async {
+  //     try {
+  //       final items = await MoviePageLogic().getPopularMovies();
+  //       if (items.isEmpty) return null;
+  //       final pick =
+  //           items[DateTime.now().millisecondsSinceEpoch % items.length];
+  //       if (pick.id == null) return null;
+  //       return _HeroCardData(
+  //         title: pick.title ?? 'Movie',
+  //         subtitle: 'Trending Movie',
+  //         imageUrl: pick.imageURL,
+  //         onOpen: () => MovieDetailPage(movieID: pick.id!),
+  //       );
+  //     } catch (_) {
+  //       return null;
+  //     }
+  //   }
 
-    final options = <Future<_HeroCardData?> Function()>[
-      tryAnime,
-      tryGame,
-      tryMovie,
-    ];
-    options.shuffle(Random(DateTime.now().millisecondsSinceEpoch));
+  //   final options = <Future<_HeroCardData?> Function()>[
+  //     tryAnime,
+  //     tryGame,
+  //     tryMovie,
+  //   ];
+  //   options.shuffle(Random(DateTime.now().millisecondsSinceEpoch));
 
-    for (final fn in options) {
-      final result = await fn();
-      if (result != null) return result;
-    }
-    return null;
-  }
+  //   for (final fn in options) {
+  //     final result = await fn();
+  //     if (result != null) return result;
+  //   }
+  //   return null;
+  // }
 
-  _HeroCardData? _pickBacklogHero(LibraryProvider provider) {
-    final entries = provider.libraryMap.entries.where((e) {
-      final raw = e.value;
-      if (raw is! Map) return false;
-      final m = Map<String, dynamic>.from(raw);
-      return (m['folder']?.toString() ?? 'library') == 'backlog';
-    }).toList();
+  // _HeroCardData? _pickBacklogHero(LibraryProvider provider) {
+  //   final entries = provider.libraryMap.entries.where((e) {
+  //     final raw = e.value;
+  //     if (raw is! Map) return false;
+  //     final m = Map<String, dynamic>.from(raw);
+  //     return (m['folder']?.toString() ?? 'library') == 'backlog';
+  //   }).toList();
 
-    if (entries.isEmpty) return null;
+  //   if (entries.isEmpty) return null;
 
-    _backlogHeroKey ??=
-        entries[DateTime.now().millisecondsSinceEpoch % entries.length]
-            .key
-            .toString();
-    final chosen = entries.firstWhere(
-      (e) => e.key.toString() == _backlogHeroKey,
-      orElse: () => entries.first,
-    );
+  //   _backlogHeroKey ??=
+  //       entries[DateTime.now().millisecondsSinceEpoch % entries.length]
+  //           .key
+  //           .toString();
+  //   final chosen = entries.firstWhere(
+  //     (e) => e.key.toString() == _backlogHeroKey,
+  //     orElse: () => entries.first,
+  //   );
 
-    final raw = chosen.value;
-    if (raw is! Map) return null;
-    final m = Map<String, dynamic>.from(raw);
-    final title = (m['title'] ?? 'Backlog').toString();
-    final imageUrl = m['imageURL']?.toString();
-    final id = m['id'];
+  //   final raw = chosen.value;
+  //   if (raw is! Map) return null;
+  //   final m = Map<String, dynamic>.from(raw);
+  //   final title = (m['title'] ?? 'Backlog').toString();
+  //   final imageUrl = m['imageURL']?.toString();
+  //   final id = m['id'];
 
-    Widget Function()? onOpen;
-    final prefix = chosen.key.toString().split('_').first;
-    if (id is int) {
-      switch (prefix) {
-        case 'game':
-          onOpen = () => GameDetailPage(gameID: id);
-          break;
-        case 'movie':
-          onOpen = () => MovieDetailPage(movieID: id);
-          break;
-        case 'serie':
-          onOpen = () => SerieDetailPage(serieID: id);
-          break;
-        case 'anime':
-          onOpen = () => AnimeDetailPage(animeId: id);
-          break;
-      }
-    }
+  //   Widget Function()? onOpen;
+  //   final prefix = chosen.key.toString().split('_').first;
+  //   if (id is int) {
+  //     switch (prefix) {
+  //       case 'game':
+  //         onOpen = () => GameDetailPage(gameID: id);
+  //         break;
+  //       case 'movie':
+  //         onOpen = () => MovieDetailPage(movieID: id);
+  //         break;
+  //       case 'serie':
+  //         onOpen = () => SerieDetailPage(serieID: id);
+  //         break;
+  //       case 'anime':
+  //         onOpen = () => AnimeDetailPage(animeId: id);
+  //         break;
+  //     }
+  //   }
 
-    return _HeroCardData(
-      title: title,
-      subtitle: 'From Backlog',
-      imageUrl: imageUrl,
-      onOpen: onOpen,
-    );
-  }
+  //   return _HeroCardData(
+  //     title: title,
+  //     subtitle: 'From Backlog',
+  //     imageUrl: imageUrl,
+  //     onOpen: onOpen,
+  //   );
+  // }
 
-  Widget _buildDoubleHero(Color primaryColor) {
-    return Consumer<LibraryProvider>(
-      builder: (context, libraryProvider, child) {
-        final left = _pickBacklogHero(libraryProvider) ??
-            _HeroCardData(
-              title: 'Backlog boş',
-              subtitle: 'İçerik ekleyerek backlog vitrini oluştur.',
-              imageUrl: null,
-              onOpen: null,
-            );
+  // Widget _buildDoubleHero(Color primaryColor) {
+  //   return Consumer<LibraryProvider>(
+  //     builder: (context, libraryProvider, child) {
+  //       final left = _pickBacklogHero(libraryProvider) ??
+  //           _HeroCardData(
+  //             title: 'Backlog boş',
+  //             subtitle: 'İçerik ekleyerek backlog vitrini oluştur.',
+  //             imageUrl: null,
+  //             onOpen: null,
+  //           );
 
-        return Row(
-          children: [
-            Expanded(
-              child: _HeroCard(
-                primaryColor: primaryColor,
-                title: left.title,
-                subtitle: left.subtitle,
-                imageUrl: left.imageUrl,
-                onOpen: left.onOpen,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: FutureBuilder<_HeroCardData?>(
-                future: _exploreHeroFuture,
-                builder: (context, snapshot) {
-                  final right = snapshot.data ??
-                      _HeroCardData(
-                        title: "Vault'u Keşfet",
-                        subtitle: 'Global Trends',
-                        imageUrl: null,
-                        onOpen: null,
-                      );
-                  return Skeletonizer(
-                    enabled: snapshot.connectionState != ConnectionState.done,
-                    child: _HeroCard(
-                      primaryColor: primaryColor,
-                      title: right.title,
-                      subtitle: right.subtitle,
-                      imageUrl: right.imageUrl,
-                      onOpen: right.onOpen,
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  //       return Row(
+  //         children: [
+  //           Expanded(
+  //             child: _HeroCard(
+  //               primaryColor: primaryColor,
+  //               title: left.title,
+  //               subtitle: left.subtitle,
+  //               imageUrl: left.imageUrl,
+  //               onOpen: left.onOpen,
+  //             ),
+  //           ),
+  //           const SizedBox(width: 12),
+  //           Expanded(
+  //             child: FutureBuilder<_HeroCardData?>(
+  //               future: _exploreHeroFuture,
+  //               builder: (context, snapshot) {
+  //                 final right = snapshot.data ??
+  //                     _HeroCardData(
+  //                       title: "Vault'u Keşfet",
+  //                       subtitle: 'Global Trends',
+  //                       imageUrl: null,
+  //                       onOpen: null,
+  //                     );
+  //                 return Skeletonizer(
+  //                   enabled: snapshot.connectionState != ConnectionState.done,
+  //                   child: _HeroCard(
+  //                     primaryColor: primaryColor,
+  //                     title: right.title,
+  //                     subtitle: right.subtitle,
+  //                     imageUrl: right.imageUrl,
+  //                     onOpen: right.onOpen,
+  //                   ),
+  //                 );
+  //               },
+  //             ),
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
 
   void _showSearchOverlay() {
     _searchOverlay = _createSearchOverlay();
@@ -337,633 +339,584 @@ class _LayoutScaffoldState extends State<LayoutScaffold>
     );
   }
 
+  void _selectTab(int index) {
+    setState(() {
+      _selectedLibraryFolder = 'library';
+      _tabController.animateTo(index);
+    });
+  }
+
+  void _openLibraryFolder(String folder) {
+    setState(() {
+      _selectedLibraryFolder = folder;
+      _tabController.animateTo(1);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        StreamBuilder<DocumentSnapshot>(
-            stream: _userStream,
-            builder: (BuildContext context, AsyncSnapshot snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Scaffold(
-                  body: Center(
-                    child: CustomCPI(),
-                  ),
-                );
-              }
+    int themeColor = Provider.of<ThemeProvider>(context).color;
+    final primaryColor = Color(themeColor);
+    final userProvider = context.watch<UserProvider>();
+    final snapshotData = userProvider.userData;
 
-              if (snapshot.hasError ||
-                  !snapshot.hasData ||
-                  snapshot.data == null ||
-                  !snapshot.data!.exists) {
-                // If no data, potentially first login or error.
-                // Handle gracefully, maybe just show empty UI or redirect.
-                // For now, let's assume we can show the scaffold with empty values.
-              }
-
-              var snapshotData = snapshot.data?.data() as Map<String, dynamic>?;
-              var imageURL = snapshotData?['imageURL'];
-              int totalContentCount = 0;
-              if (snapshotData != null && snapshotData['library'] != null) {
-                final lib = snapshotData['library'];
-                if (lib is Map) {
-                  totalContentCount = lib.length;
-                }
-              }
-
-              return Scaffold(
-                backgroundColor: const Color(0xFF0F0F0F),
-                appBar: AppBar(
-                  backgroundColor: Colors.black,
-                  elevation: 0,
-                  toolbarHeight: 80,
-                  titleSpacing: 24,
-                  title: Row(
-                    children: [
-                      // Left Section: Logo, Toggle, Nav
-                      Text(
-                        "VAULT",
-                        style: GoogleFonts.orbitron(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 6,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(width: 48),
-                      _buildTopNavigation(_tabController, context),
-
-                      const Spacer(),
-
-                      // Center Section: Search Bar
-                      CompositedTransformTarget(
-                        link: _searchLayerLink,
-                        child: SizedBox(
-                          width: 400,
-                          height: 44,
-                          child: TextField(
-                            focusNode: _searchFocusNode,
-                            style: GoogleFonts.inter(
-                                color: Colors.white, fontSize: 14),
-                            decoration: InputDecoration(
-                              filled: true,
-                              fillColor: const Color(0xFF1A1A1A),
-                              hintText: 'Search Library...',
-                              hintStyle: GoogleFonts.inter(
-                                  color: Colors.white38, fontSize: 14),
-                              prefixIcon: const Icon(Icons.search,
-                                  color: Colors.white38, size: 20),
-                              contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 0, horizontal: 16),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(
-                                    color: Colors.white.withValues(alpha: 0.05),
-                                    width: 1),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(
-                                    color: Theme.of(context).primaryColor,
-                                    width: 1),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      const Spacer(),
-
-                      // Right Section: Actions
-                      Row(
-                        children: [
-                          // Action Square (+)
-                          _ActionSquareButton(
-                            icon: Icons.add,
-                            onTap: () {},
-                            primaryColor: Theme.of(context).primaryColor,
-                          ),
-                          const SizedBox(width: 16),
-
-                          // Settings Group
-                          _ActionSquareButton(
-                            onTap: () {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          const SettingsPage()));
-                            },
-                            icon: FontAwesomeIcons.sliders,
-                            primaryColor: Theme.of(context).primaryColor,
-                          ),
-                          const SizedBox(width: 8),
-                          _ActionSquareButton(
-                            onTap: () async {
-                              final provider = Provider.of<LibraryProvider>(
-                                  context,
-                                  listen: false);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content:
-                                        Text("Syncing library to cloud..."),
-                                    duration: Duration(seconds: 1)),
-                              );
-                              await provider.syncToFirebase();
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content:
-                                          Text("Sync completed successfully!")),
-                                );
-                              }
-                            },
-                            icon: FontAwesomeIcons.cloudArrowUp,
-                            primaryColor: Theme.of(context).primaryColor,
-                          ),
-
-                          // Vertical Divider
-                          Container(
-                            height: 24,
-                            width: 1,
-                            margin: const EdgeInsets.symmetric(horizontal: 16),
-                            color: Colors.white.withValues(alpha: 0.1),
-                          ),
-
-                          // Right Panel Toggles
-                          _ActionSquareButton(
-                            onTap: () {
-                              setState(() {
-                                if (_activeRightPanel == 'timeline' &&
-                                    _isRightOpen) {
-                                  _isRightOpen = false;
-                                  _activeRightPanel = '';
-                                } else {
-                                  _isRightOpen = true;
-                                  _activeRightPanel = 'timeline';
-                                }
-                              });
-                            },
-                            icon: FontAwesomeIcons.clock,
-                            primaryColor: _activeRightPanel == 'timeline'
-                                ? Theme.of(context).primaryColor
-                                : Colors.white70,
-                          ),
-                          const SizedBox(width: 8),
-                          _ActionSquareButton(
-                            onTap: () {
-                              setState(() {
-                                if (_activeRightPanel == 'friends' &&
-                                    _isRightOpen) {
-                                  _isRightOpen = false;
-                                  _activeRightPanel = '';
-                                } else {
-                                  _isRightOpen = true;
-                                  _activeRightPanel = 'friends';
-                                }
-                              });
-                            },
-                            icon: FontAwesomeIcons.userGroup,
-                            primaryColor: _activeRightPanel == 'friends'
-                                ? Theme.of(context).primaryColor
-                                : Colors.white70,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  centerTitle: true,
-                ),
-                body: Row(
+    if (snapshotData == null) {
+      return const Scaffold(
+          body: Center(
+        child: CircularProgressIndicator(),
+      ));
+    }
+    // var snapshotData = snapshot.data?.data() as Map<String, dynamic>?;
+    var imageURL = snapshotData['imageURL'];
+    int totalContentCount = 0;
+    if (snapshotData['library'] != null) {
+      final lib = snapshotData['library'];
+      if (lib is Map) {
+        totalContentCount = lib.length;
+      }
+    }
+    return Scaffold(
+      backgroundColor: const Color(0xFF0F0F0F),
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        elevation: 0,
+        toolbarHeight: 80,
+        titleSpacing: 24,
+        title: Row(
+          children: [
+            Text(
+              "VAULT",
+              style: GoogleFonts.orbitron(
+                fontSize: 32,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 6,
+                color: Colors.white,
+              ),
+            ),
+            Expanded(
+              child: Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Left Panel (Navigation/Discover)
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                      width: _isLeftOpen
-                          ? UIConstants.leftSidebarExpandedWidth
-                          : UIConstants.leftSidebarCollapsedWidth,
-                      color: const Color(0xFF121212),
-                      child: Column(
-                        children: [
-                          Expanded(
-                            child: _isLeftOpen
-                                ? _buildDiscoverSidebar(context)
-                                : _buildCollapsedSidebar(context),
-                          ),
-                          if (_isLeftOpen) ...[
-                            const Spacer(),
-                            _buildSidebarProfile(
-                                context,
-                                imageURL,
-                                Theme.of(context).primaryColor,
-                                snapshotData?['username'],
-                                totalContentCount),
-                            const SizedBox(height: 16),
-                          ] else ...[
-                            const Spacer(),
-                            // Collapsed profile icon
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 16.0),
-                              child: CircleAvatar(
-                                radius: 18,
-                                backgroundImage: imageURL != null
-                                    ? CachedNetworkImageProvider(imageURL)
-                                    : null,
-                                child: imageURL == null
-                                    ? const Icon(Icons.person, size: 18)
-                                    : null,
-                              ),
-                            )
-                          ]
-                        ],
-                      ),
+                    _ActionSquareButton(
+                      icon: Icons.add,
+                      onTap: () {},
+                      primaryColor: Theme.of(context).primaryColor,
                     ),
-
-                    // Main Content
-                    Expanded(
-                      child: LayoutBuilder(builder: (context, constraints) {
-                        return Container(
-                          width: constraints.maxWidth,
-                          margin: const EdgeInsets.only(top: 4, bottom: 16),
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.1),
-                              width: 1,
+                    const SizedBox(width: 12),
+                    CompositedTransformTarget(
+                      link: _searchLayerLink,
+                      child: SizedBox(
+                        width: 460,
+                        height: 44,
+                        child: TextField(
+                          focusNode: _searchFocusNode,
+                          style:
+                              GoogleFonts.inter(color: Colors.white, fontSize: 14),
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: const Color(0xFF1A1A1A),
+                            hintText: 'Search Library...',
+                            hintStyle: GoogleFonts.inter(
+                                color: Colors.white38, fontSize: 14),
+                            prefixIcon: const Icon(Icons.search,
+                                color: Colors.white38, size: 20),
+                            contentPadding: const EdgeInsets.symmetric(
+                                vertical: 0, horizontal: 16),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
                             ),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: IndexedStack(
-                              index: _tabController.index,
-                              children: [
-                                const HomeView(),
-                                const LibraryPage(),
-                                _buildPageWithHero(const GamesPage()),
-                                _buildPageWithHero(const MoviesPage()),
-                                _buildPageWithHero(const SeriesPage()),
-                                _buildPageWithHero(const AnimesPage()),
-                              ],
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                  color: Colors.white.withValues(alpha: 0.05),
+                                  width: 1),
                             ),
-                          ),
-                        );
-                      }),
-                    ),
-
-                    // Right Panel (Social/Timeline)
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                      width: _isRightOpen ? UIConstants.rightSidebarWidth : 0,
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: SizedBox(
-                          width: UIConstants.rightSidebarWidth,
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 300),
-                            child: _activeRightPanel == 'friends'
-                                ? _buildFriendsPanel(context)
-                                : _buildTimelinePanel(context),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide:
+                                  BorderSide(color: primaryColor, width: 1),
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ],
                 ),
-              );
-            }),
-        FutureBuilder(
-            future: getAppVersion(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                String appVersion = "${snapshot.data}";
-                return Positioned(
-                  bottom: 10,
-                  right: 10,
-                  child: UpdatWidget(
-                    closeOnInstall: true,
-                    openOnDownload: false,
-                    currentVersion: appVersion,
-                    getLatestVersion: () async {
-                      final data = await http.get(Uri.parse(
-                        "https://api.github.com/repos/BioKZM/GNML/releases/latest",
-                      ));
-                      return jsonDecode(data.body)["tag_name"];
-                    },
-                    getBinaryUrl: (latestVersion) async {
-                      return "https://github.com/BioKZM/GNML/releases/download/$latestVersion/GNML.exe";
-                    },
-                    appName: "GNML - Game and Movie Library",
-                  ),
-                );
-              } else {
-                return const Positioned(
-                  bottom: 10,
-                  left: 10,
-                  child: Card(child: CustomCPI()),
-                );
-              }
-            })
-      ],
-    );
-  }
+              ),
+            ),
+            Row(
+              children: [
+                _ActionSquareButton(
+                  onTap: () async {
+                    final provider =
+                        Provider.of<LibraryProvider>(context, listen: false);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text("Syncing library to cloud..."),
+                          duration: Duration(seconds: 1)),
+                    );
+                    await provider.syncToFirebase();
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text("Sync completed successfully!")),
+                      );
+                    }
+                  },
+                  icon: FontAwesomeIcons.cloudArrowUp,
+                  primaryColor: Theme.of(context).primaryColor,
+                ),
+                const SizedBox(width: 8),
+                _ActionSquareButton(
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const SettingsPage()));
+                  },
+                  icon: FontAwesomeIcons.sliders,
+                  primaryColor: Theme.of(context).primaryColor,
+                ),
 
-  Widget _buildPageWithHero(Widget child) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: SizedBox(
-            height: 180,
-            child: _buildDoubleHero(Theme.of(context).primaryColor),
-          ),
-        ),
-        Expanded(child: child),
-      ],
-    );
-  }
+                Container(
+                  height: 24,
+                  width: 1,
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  color: Colors.white.withValues(alpha: 0.1),
+                ),
 
-  Widget _buildTopNavigation(
-      TabController tabController, BuildContext context) {
-    final primaryColor = Color(Provider.of<ThemeProvider>(context).color);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _ModernTabItem(
-          label: "Home",
-          index: 0,
-          controller: tabController,
-          primaryColor: primaryColor,
-        ),
-        const SizedBox(width: 24),
-        _ModernTabItem(
-          label: "Library",
-          index: 1,
-          controller: tabController,
-          primaryColor: primaryColor,
-        ),
-        const SizedBox(width: 24),
-        _ModernTabItem(
-          label: "Games",
-          index: 2,
-          controller: tabController,
-          primaryColor: primaryColor,
-        ),
-        const SizedBox(width: 24),
-        _ModernTabItem(
-          label: "Movies",
-          index: 3,
-          controller: tabController,
-          primaryColor: primaryColor,
-        ),
-        const SizedBox(width: 24),
-        _ModernTabItem(
-          label: "Series",
-          index: 4,
-          controller: tabController,
-          primaryColor: primaryColor,
-        ),
-        const SizedBox(width: 24),
-        _ModernTabItem(
-          label: "Animes",
-          index: 5,
-          controller: tabController,
-          primaryColor: primaryColor,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDiscoverSidebar(BuildContext context) {
-    final primaryColor = Color(Provider.of<ThemeProvider>(context).color);
-    int currentPage = _tabController.index;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-          child: Row(
-            children: [
-              SizedBox(
-                width: 24,
-                height: 24,
-                child: IconButton(
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  onPressed: () {
+                _ActionSquareButton(
+                  onTap: () {
                     setState(() {
-                      _isLeftOpen = !_isLeftOpen;
+                      if (_activeRightPanel == 'timeline' && _isRightOpen) {
+                        _isRightOpen = false;
+                        _activeRightPanel = '';
+                      } else {
+                        _isRightOpen = true;
+                        _activeRightPanel = 'timeline';
+                      }
                     });
                   },
-                  icon: const Icon(Icons.menu, color: Colors.white70, size: 20),
+                  icon: FontAwesomeIcons.clock,
+                  primaryColor: _activeRightPanel == 'timeline'
+                      ? Theme.of(context).primaryColor
+                      : Colors.white70,
+                ),
+                const SizedBox(width: 8),
+                _ActionSquareButton(
+                  onTap: () {
+                    setState(() {
+                      if (_activeRightPanel == 'friends' && _isRightOpen) {
+                        _isRightOpen = false;
+                        _activeRightPanel = '';
+                      } else {
+                        _isRightOpen = true;
+                        _activeRightPanel = 'friends';
+                      }
+                    });
+                  },
+                  icon: FontAwesomeIcons.userGroup,
+                  primaryColor: _activeRightPanel == 'friends'
+                      ? Theme.of(context).primaryColor
+                      : Colors.white70,
+                ),
+              ],
+            ),
+          ],
+        ),
+        centerTitle: true,
+      ),
+      body: Row(
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            width: _isLeftOpen
+                ? UIConstants.leftSidebarExpandedWidth
+                : UIConstants.leftSidebarCollapsedWidth,
+            color: const Color(0xFF121212),
+            child: Column(
+              children: [
+                Expanded(
+                  child: _isLeftOpen
+                      ? _buildAppSidebar(context)
+                      : _buildCollapsedSidebar(context),
+                ),
+                if (_isLeftOpen) ...[
+                  _buildSidebarProfile(context, imageURL, primaryColor,
+                      snapshotData?['username'], totalContentCount),
+                  const SizedBox(height: 16),
+                ] else ...[
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: CircleAvatar(
+                      radius: 18,
+                      backgroundImage: imageURL != null
+                          ? CachedNetworkImageProvider(imageURL)
+                          : null,
+                      child: imageURL == null
+                          ? const Icon(Icons.person, size: 18)
+                          : null,
+                    ),
+                  )
+                ]
+              ],
+            ),
+          ),
+
+          Expanded(
+            child: LayoutBuilder(builder: (context, constraints) {
+              return Container(
+                width: constraints.maxWidth,
+                decoration: const BoxDecoration(),
+                child: ClipRRect(
+                  child: IndexedStack(
+                    index: _tabController.index,
+                    children: [
+                      const HomeView(),
+                      LibraryPage(initialFolder: _selectedLibraryFolder),
+                      const GamesPage(),
+                      const MoviesPage(),
+                      const SeriesPage(),
+                      const AnimesPage(),
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ),
+
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            width: _isRightOpen ? UIConstants.rightSidebarWidth : 0,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SizedBox(
+                width: UIConstants.rightSidebarWidth,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: _activeRightPanel == 'friends'
+                      ? _buildFriendsPanel(context)
+                      : _buildTimelinePanel(context),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAppSidebar(BuildContext context) {
+    final primaryColor = Color(Provider.of<ThemeProvider>(context).color);
+    final libraryProvider = context.watch<LibraryProvider>();
+    final folderCounts = _buildFolderCounts(libraryProvider.libraryMap);
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+          child: Row(
+            children: [
+              IconButton(
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                onPressed: () {
+                  setState(() {
+                    _isLeftOpen = !_isLeftOpen;
+                  });
+                },
+                icon: const Icon(
+                  FluentIcons.panel_left_contract_24_regular,
+                  color: Colors.white70,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Browse',
+                style: GoogleFonts.inter(
+                  color: Colors.white54,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.2,
                 ),
               ),
             ],
           ),
         ),
-
-        // Home View (Index 0)
-        if (currentPage == 0) ...[
-          Padding(
-            padding: const EdgeInsets.fromLTRB(56, 8, 16, 12),
-            child: Text(
-              "QUICK ACCESS",
-              style: GoogleFonts.inter(
-                color: Colors.white54,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.2,
-              ),
-            ),
-          ),
-          _DiscoverItem(
-            icon: FontAwesomeIcons.fire,
-            label: "Trending Now",
-            onTap: () {},
-            primaryColor: primaryColor,
-          ),
-          _DiscoverItem(
-            icon: FontAwesomeIcons.bolt,
-            label: "Quick Links",
-            onTap: () {},
-            primaryColor: primaryColor,
-          ),
-          _DiscoverItem(
-            icon: FontAwesomeIcons.clockRotateLeft,
-            label: "Recent Activity",
-            onTap: () {},
-            primaryColor: primaryColor,
-          ),
-        ] else if (currentPage == 1) ...[
-          // Library (Index 1)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(56, 8, 16, 12),
-            child: Text(
-              "LIBRARY",
-              style: GoogleFonts.inter(
-                color: Colors.white54,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.2,
-              ),
-            ),
-          ),
-          _buildExpandableFolder("My Favorites", primaryColor,
-              ["Game 1", "Movie A"], FontAwesomeIcons.star),
-          _buildExpandableFolder("Completed", primaryColor, ["Game 2"],
-              FontAwesomeIcons.circleCheck),
-          _buildExpandableFolder("Backlog", primaryColor,
-              ["Game 3", "Series X"], FontAwesomeIcons.clock),
-        ] else if (currentPage == 2) ...[
-          // Games (Index 2)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(56, 8, 16, 12),
-            child: Text(
-              "DISCOVER GAMES",
-              style: GoogleFonts.inter(
-                color: Colors.white54,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.2,
-              ),
-            ),
-          ),
-          _DiscoverItem(
-            icon: FontAwesomeIcons.fire,
-            label: "Hot",
-            onTap: () {},
-            primaryColor: primaryColor,
-          ),
-          _DiscoverItem(
-            icon: FontAwesomeIcons.calendar,
-            label: "Upcoming",
-            onTap: () {},
-            primaryColor: primaryColor,
-          ),
-          _DiscoverItem(
-            icon: FontAwesomeIcons.star,
-            label: "New Releases",
-            onTap: () {},
-            primaryColor: primaryColor,
-          ),
-        ] else ...[
-          // Default Discover (Movies, Series, Animes)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(56, 8, 16, 12),
-            child: Text(
-              "DISCOVER",
-              style: GoogleFonts.inter(
-                color: Colors.white54,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.2,
-              ),
-            ),
-          ),
-          _DiscoverItem(
-            icon: FontAwesomeIcons.fire,
-            label: "Hot",
-            onTap: () {},
-            primaryColor: primaryColor,
-          ),
-          _DiscoverItem(
-            icon: FontAwesomeIcons.towerBroadcast,
-            label: "On Aired",
-            onTap: () {},
-            primaryColor: primaryColor,
-          ),
-          _DiscoverItem(
-            icon: FontAwesomeIcons.calendar,
-            label: "Upcoming",
-            onTap: () {},
-            primaryColor: primaryColor,
-          ),
-        ]
-      ],
-    );
-  }
-
-  Widget _buildExpandableFolder(
-      String title, Color primaryColor, List<String> items, IconData icon) {
-    return Theme(
-      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-      child: ExpansionTile(
-        tilePadding: const EdgeInsets.symmetric(horizontal: 16),
-        leading: SizedBox(
-          width: 24,
-          height: 24,
-          child: Center(
-            child: Icon(icon, color: primaryColor, size: 18),
-          ),
-        ),
-        title: Text(
-          title,
-          style: GoogleFonts.inter(
-            color: Colors.white70,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        children: items
-            .map((item) => ListTile(
-                  contentPadding: const EdgeInsets.only(left: 56, right: 16),
-                  visualDensity: VisualDensity.compact,
-                  title: Text(
-                    item,
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildSidebarNavItem(
+                  icon: FluentIcons.home_24_regular,
+                  label: 'Home',
+                  selected: _tabController.index == 0,
+                  primaryColor: primaryColor,
+                  onTap: () => _selectTab(0),
+                ),
+                _buildSidebarNavItem(
+                  icon: FluentIcons.library_24_regular,
+                  label: 'Library',
+                  selected:
+                      _tabController.index == 1 && _selectedLibraryFolder == 'library',
+                  primaryColor: primaryColor,
+                  badge: folderCounts['library'],
+                  onTap: () => _openLibraryFolder('library'),
+                ),
+                _buildSidebarNavItem(
+                  icon: FontAwesomeIcons.gamepad,
+                  label: 'Games',
+                  selected: _tabController.index == 2,
+                  primaryColor: primaryColor,
+                  onTap: () => _selectTab(2),
+                ),
+                _buildSidebarNavItem(
+                  icon: FontAwesomeIcons.film,
+                  label: 'Movies',
+                  selected: _tabController.index == 3,
+                  primaryColor: primaryColor,
+                  onTap: () => _selectTab(3),
+                ),
+                _buildSidebarNavItem(
+                  icon: FontAwesomeIcons.tv,
+                  label: 'Series',
+                  selected: _tabController.index == 4,
+                  primaryColor: primaryColor,
+                  onTap: () => _selectTab(4),
+                ),
+                _buildSidebarNavItem(
+                  icon: FontAwesomeIcons.dragon,
+                  label: 'Anime',
+                  selected: _tabController.index == 5,
+                  primaryColor: primaryColor,
+                  onTap: () => _selectTab(5),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 18, 16, 10),
+                  child: Text(
+                    'Your Library',
                     style: GoogleFonts.inter(
                       color: Colors.white54,
-                      fontSize: 13,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.2,
                     ),
                   ),
-                  onTap: () {},
-                  dense: true,
-                ))
-            .toList(),
-      ),
+                ),
+                _buildSidebarNavItem(
+                  icon: FontAwesomeIcons.star,
+                  label: 'Favorites',
+                  selected: _tabController.index == 1 &&
+                      _selectedLibraryFolder == 'favorites',
+                  primaryColor: primaryColor,
+                  badge: folderCounts['favorites'],
+                  onTap: () => _openLibraryFolder('favorites'),
+                ),
+                _buildSidebarNavItem(
+                  icon: FontAwesomeIcons.circleCheck,
+                  label: 'Completed',
+                  selected: _tabController.index == 1 &&
+                      _selectedLibraryFolder == 'completed',
+                  primaryColor: primaryColor,
+                  badge: folderCounts['completed'],
+                  onTap: () => _openLibraryFolder('completed'),
+                ),
+                _buildSidebarNavItem(
+                  icon: FontAwesomeIcons.clock,
+                  label: 'Backlog',
+                  selected:
+                      _tabController.index == 1 && _selectedLibraryFolder == 'backlog',
+                  primaryColor: primaryColor,
+                  badge: folderCounts['backlog'],
+                  onTap: () => _openLibraryFolder('backlog'),
+                ),
+                ...libraryProvider.customFolders.map((folder) {
+                  return _buildSidebarNavItem(
+                    icon: FontAwesomeIcons.folderOpen,
+                    label: folder,
+                    selected: _tabController.index == 1 &&
+                        _selectedLibraryFolder == folder,
+                    primaryColor: primaryColor,
+                    badge: folderCounts[folder],
+                    onTap: () => _openLibraryFolder(folder),
+                  );
+                }),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildCollapsedSidebar(BuildContext context) {
     final primaryColor = Color(Provider.of<ThemeProvider>(context).color);
+    final libraryProvider = context.watch<LibraryProvider>();
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          padding: const EdgeInsets.symmetric(vertical: 10.0),
           child: IconButton(
             onPressed: () {
               setState(() {
                 _isLeftOpen = !_isLeftOpen;
               });
             },
-            icon: const Icon(FluentIcons.navigation_24_regular,
-                color: Colors.white70),
+            icon: const Icon(
+              FluentIcons.panel_left_expand_24_regular,
+              color: Colors.white70,
+            ),
           ),
         ),
-        const SizedBox(height: 8),
-        IconButton(
-          icon: Icon(FontAwesomeIcons.fire, color: primaryColor),
-          tooltip: "Hot",
-          onPressed: () {},
+        const SizedBox(height: 6),
+        _buildCollapsedSidebarButton(
+          icon: FluentIcons.home_24_regular,
+          tooltip: 'Home',
+          selected: _tabController.index == 0,
+          primaryColor: primaryColor,
+          onTap: () => _selectTab(0),
+        ),
+        _buildCollapsedSidebarButton(
+          icon: FluentIcons.library_24_regular,
+          tooltip: 'Library',
+          selected: _tabController.index == 1 && _selectedLibraryFolder == 'library',
+          primaryColor: primaryColor,
+          onTap: () => _openLibraryFolder('library'),
+        ),
+        _buildCollapsedSidebarButton(
+          icon: FontAwesomeIcons.gamepad,
+          tooltip: 'Games',
+          selected: _tabController.index == 2,
+          primaryColor: primaryColor,
+          onTap: () => _selectTab(2),
+        ),
+        _buildCollapsedSidebarButton(
+          icon: FontAwesomeIcons.film,
+          tooltip: 'Movies',
+          selected: _tabController.index == 3,
+          primaryColor: primaryColor,
+          onTap: () => _selectTab(3),
+        ),
+        _buildCollapsedSidebarButton(
+          icon: FontAwesomeIcons.tv,
+          tooltip: 'Series',
+          selected: _tabController.index == 4,
+          primaryColor: primaryColor,
+          onTap: () => _selectTab(4),
+        ),
+        _buildCollapsedSidebarButton(
+          icon: FontAwesomeIcons.dragon,
+          tooltip: 'Anime',
+          selected: _tabController.index == 5,
+          primaryColor: primaryColor,
+          onTap: () => _selectTab(5),
         ),
         const SizedBox(height: 16),
-        IconButton(
-          icon: Icon(FontAwesomeIcons.towerBroadcast, color: primaryColor),
-          tooltip: "On Aired",
-          onPressed: () {},
+        _buildCollapsedSidebarButton(
+          icon: FontAwesomeIcons.star,
+          tooltip: 'Favorites',
+          selected:
+              _tabController.index == 1 && _selectedLibraryFolder == 'favorites',
+          primaryColor: primaryColor,
+          onTap: () => _openLibraryFolder('favorites'),
         ),
-        const SizedBox(height: 16),
-        IconButton(
-          icon: Icon(FontAwesomeIcons.calendar, color: primaryColor),
-          tooltip: "Upcoming",
-          onPressed: () {},
+        _buildCollapsedSidebarButton(
+          icon: FontAwesomeIcons.circleCheck,
+          tooltip: 'Completed',
+          selected:
+              _tabController.index == 1 && _selectedLibraryFolder == 'completed',
+          primaryColor: primaryColor,
+          onTap: () => _openLibraryFolder('completed'),
         ),
+        _buildCollapsedSidebarButton(
+          icon: FontAwesomeIcons.clock,
+          tooltip: 'Backlog',
+          selected:
+              _tabController.index == 1 && _selectedLibraryFolder == 'backlog',
+          primaryColor: primaryColor,
+          onTap: () => _openLibraryFolder('backlog'),
+        ),
+        ...libraryProvider.customFolders.take(3).map((folder) {
+          return _buildCollapsedSidebarButton(
+            icon: FontAwesomeIcons.folderOpen,
+            tooltip: folder,
+            selected:
+                _tabController.index == 1 && _selectedLibraryFolder == folder,
+            primaryColor: primaryColor,
+            onTap: () => _openLibraryFolder(folder),
+          );
+        }),
       ],
+    );
+  }
+
+  Map<String, int> _buildFolderCounts(Map<String, dynamic> libraryMap) {
+    final counts = <String, int>{
+      'library': libraryMap.length,
+      'favorites': 0,
+      'completed': 0,
+      'backlog': 0,
+    };
+
+    for (final entry in libraryMap.entries) {
+      final raw = entry.value;
+      if (raw is! Map) continue;
+      final folder = raw['folder']?.toString() ?? 'library';
+      counts[folder] = (counts[folder] ?? 0) + 1;
+    }
+
+    return counts;
+  }
+
+  Widget _buildSidebarNavItem({
+    required IconData icon,
+    required String label,
+    required bool selected,
+    required Color primaryColor,
+    required VoidCallback onTap,
+    int? badge,
+  }) {
+    final accentColor =
+        selected ? primaryColor.withValues(alpha: 0.18) : Colors.transparent;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      child: _SidebarNavButton(
+        icon: icon,
+        label: label,
+        selected: selected,
+        primaryColor: primaryColor,
+        badge: badge,
+        badgeBackground: accentColor,
+        onTap: onTap,
+      ),
+    );
+  }
+
+  Widget _buildCollapsedSidebarButton({
+    required IconData icon,
+    required String tooltip,
+    required bool selected,
+    required Color primaryColor,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Tooltip(
+        message: tooltip,
+        child: _CollapsedSidebarNavButton(
+          icon: icon,
+          selected: selected,
+          primaryColor: primaryColor,
+          onTap: onTap,
+        ),
+      ),
     );
   }
 
@@ -1101,7 +1054,9 @@ class _LayoutScaffoldState extends State<LayoutScaffold>
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+          border: Border.all(
+              color: Color(primaryColor.value).withValues(alpha: 1),
+              width: 1.5),
         ),
         child: Row(
           children: [
@@ -1110,7 +1065,7 @@ class _LayoutScaffoldState extends State<LayoutScaffold>
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                    color: primaryColor.withValues(alpha: 0.4), width: 1.5),
+                    color: Colors.white.withValues(alpha: 0.2), width: 1.5),
               ),
               child: CircleAvatar(
                 radius: 22,
@@ -1210,6 +1165,7 @@ class _HoverableSidebarItemState extends State<_HoverableSidebarItem> {
 
   @override
   Widget build(BuildContext context) {
+    // build metodunun içindeki return kısmını şöyle güncelle:
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovering = true),
       onExit: (_) => setState(() => _isHovering = false),
@@ -1222,27 +1178,157 @@ class _HoverableSidebarItemState extends State<_HoverableSidebarItem> {
             color: _isHovering
                 ? Colors.white.withValues(alpha: 0.1)
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: _isHovering
-                ? [
-                    BoxShadow(
-                      color: widget.primaryColor.withValues(alpha: 0.1),
-                      blurRadius: 12,
-                      spreadRadius: 0,
-                    )
-                  ]
-                : [],
-            border: Border.all(
-              color: _isHovering
-                  ? widget.primaryColor.withValues(alpha: 0.2)
-                  : Colors.transparent,
-            ),
+            borderRadius: BorderRadius.circular(5),
+            // Taşan border ve shadow'u şimdilik kaldırıp dene, gerekirse aşağıdakini yap
           ),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(
-                sigmaX: _isHovering ? 4.0 : 0.0,
-                sigmaY: _isHovering ? 4.0 : 0.0),
-            child: widget.child,
+          child: widget.child,
+        ),
+      ),
+    );
+  }
+}
+
+class _SidebarNavButton extends StatefulWidget {
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final Color primaryColor;
+  final int? badge;
+  final Color badgeBackground;
+  final VoidCallback onTap;
+
+  const _SidebarNavButton({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.primaryColor,
+    required this.badge,
+    required this.badgeBackground,
+    required this.onTap,
+  });
+
+  @override
+  State<_SidebarNavButton> createState() => _SidebarNavButtonState();
+}
+
+class _SidebarNavButtonState extends State<_SidebarNavButton> {
+  bool _isHovering = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovering = true),
+      onExit: (_) => setState(() => _isHovering = false),
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+          transform: Matrix4.translationValues(_isHovering ? 4 : 0, 0, 0),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: widget.selected
+                ? widget.primaryColor.withValues(alpha: 0.14)
+                : _isHovering
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.transparent,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                widget.icon,
+                size: 17,
+                color: widget.selected ? widget.primaryColor : Colors.white60,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  widget.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.inter(
+                    color: widget.selected ? Colors.white : Colors.white70,
+                    fontSize: 13,
+                    fontWeight:
+                        widget.selected ? FontWeight.w700 : FontWeight.w500,
+                  ),
+                ),
+              ),
+              if (widget.badge != null)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: widget.badgeBackground,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    '${widget.badge}',
+                    style: GoogleFonts.inter(
+                      color:
+                          widget.selected ? widget.primaryColor : Colors.white54,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CollapsedSidebarNavButton extends StatefulWidget {
+  final IconData icon;
+  final bool selected;
+  final Color primaryColor;
+  final VoidCallback onTap;
+
+  const _CollapsedSidebarNavButton({
+    required this.icon,
+    required this.selected,
+    required this.primaryColor,
+    required this.onTap,
+  });
+
+  @override
+  State<_CollapsedSidebarNavButton> createState() =>
+      _CollapsedSidebarNavButtonState();
+}
+
+class _CollapsedSidebarNavButtonState extends State<_CollapsedSidebarNavButton> {
+  bool _isHovering = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovering = true),
+      onExit: (_) => setState(() => _isHovering = false),
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+          transform: Matrix4.translationValues(_isHovering ? 2 : 0, 0, 0),
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            color: widget.selected
+                ? widget.primaryColor.withValues(alpha: 0.14)
+                : _isHovering
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            widget.icon,
+            size: 17,
+            color: widget.selected ? widget.primaryColor : Colors.white60,
           ),
         ),
       ),

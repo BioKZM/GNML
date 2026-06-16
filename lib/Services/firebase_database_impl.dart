@@ -3,10 +3,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:vault/Services/database_service.dart';
 
 class FirebaseDatabaseImpl implements DatabaseService {
-  final FirebaseFirestore _firestore;
+  final FirebaseFirestore? _providedFirestore;
 
   FirebaseDatabaseImpl({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+      : _providedFirestore = firestore;
+
+  FirebaseFirestore get _firestore =>
+      _providedFirestore ?? FirebaseFirestore.instance;
 
   @override
   Future<Map<String, dynamic>?> getUserDocument(String uid) async {
@@ -29,6 +32,25 @@ class FirebaseDatabaseImpl implements DatabaseService {
   }
 
   @override
+  Future<void> patchUserDocument(String uid, Map<String, dynamic> patch) async {
+    if (patch.isEmpty) return;
+    await _firestore
+        .collection('users')
+        .doc(uid)
+        .set(patch, SetOptions(merge: true));
+  }
+
+  @override
+  Future<void> deleteUserFields(String uid, List<String> fieldPaths) async {
+    if (fieldPaths.isEmpty) return;
+    final patch = <String, dynamic>{};
+    for (final fieldPath in fieldPaths) {
+      patch[fieldPath] = FieldValue.delete();
+    }
+    await _firestore.collection('users').doc(uid).update(patch);
+  }
+
+  @override
   Future<void> ensureUserInitialized({
     required User user,
     String? username,
@@ -46,11 +68,12 @@ class FirebaseDatabaseImpl implements DatabaseService {
       await setUserDocument(
         user.uid,
         {
-          'schemaVersion': 1,
+          'schemaVersion': 2,
           'email': user.email,
           'username':
               username ?? user.displayName ?? user.email?.split('@').first,
           'imageURL': imageUrl ?? user.photoURL,
+          'backgroundURL': null,
           'handle': handle,
           'profile': {
             'photoUrl': imageUrl ?? user.photoURL,
@@ -58,6 +81,9 @@ class FirebaseDatabaseImpl implements DatabaseService {
           },
           'settings': {
             'lastBackgroundChange': null,
+            'profileVisibility': 'public',
+            'libraryVisibility': 'public',
+            'activityVisibility': 'public',
           },
           'showcases': {
             'enabled': {
@@ -68,6 +94,21 @@ class FirebaseDatabaseImpl implements DatabaseService {
             'favoriteCollection': [],
           },
           'library': {},
+          'sync': {
+            'lastSuccessfulSyncAt': null,
+            'lastClientCheckpointAt': null,
+            'dirtyItemCount': 0,
+            'revision': 0,
+          },
+          'stats': {
+            'totalItems': 0,
+            'games': 0,
+            'movies': 0,
+            'series': 0,
+            'anime': 0,
+            'books': 0,
+            'actors': 0,
+          },
           'folders': {
             'favorites': {'type': 'default'},
             'completed': {'type': 'default'},
@@ -83,12 +124,15 @@ class FirebaseDatabaseImpl implements DatabaseService {
 
     final existing = snapshot.data() ?? {};
     final patch = <String, dynamic>{};
-    if (existing['schemaVersion'] != 1) patch['schemaVersion'] = 1;
+    if (existing['schemaVersion'] != 2) patch['schemaVersion'] = 2;
     patch['email'] = user.email;
     patch['username'] =
         username ?? user.displayName ?? user.email?.split('@').first;
     if (existing['handle'] == null) {
       patch['handle'] = await _ensureUniqueHandle(baseHandle, uid: user.uid);
+    }
+    if (existing['backgroundURL'] == null) {
+      patch['backgroundURL'] = null;
     }
     if (existing['profile'] is! Map ||
         ((existing['profile'] as Map)['photoUrl'] == null)) {
@@ -96,6 +140,20 @@ class FirebaseDatabaseImpl implements DatabaseService {
     }
     if (existing['settings'] is! Map) {
       patch['settings.lastBackgroundChange'] = null;
+      patch['settings.profileVisibility'] = 'public';
+      patch['settings.libraryVisibility'] = 'public';
+      patch['settings.activityVisibility'] = 'public';
+    } else {
+      final settings = Map<String, dynamic>.from(existing['settings'] as Map);
+      if (!settings.containsKey('profileVisibility')) {
+        patch['settings.profileVisibility'] = 'public';
+      }
+      if (!settings.containsKey('libraryVisibility')) {
+        patch['settings.libraryVisibility'] = 'public';
+      }
+      if (!settings.containsKey('activityVisibility')) {
+        patch['settings.activityVisibility'] = 'public';
+      }
     }
     if (existing['showcases'] == null) {
       patch['showcases'] = {
@@ -108,6 +166,25 @@ class FirebaseDatabaseImpl implements DatabaseService {
       };
     }
     if (existing['library'] == null) patch['library'] = {};
+    if (existing['sync'] == null) {
+      patch['sync'] = {
+        'lastSuccessfulSyncAt': null,
+        'lastClientCheckpointAt': null,
+        'dirtyItemCount': 0,
+        'revision': 0,
+      };
+    }
+    if (existing['stats'] == null) {
+      patch['stats'] = {
+        'totalItems': 0,
+        'games': 0,
+        'movies': 0,
+        'series': 0,
+        'anime': 0,
+        'books': 0,
+        'actors': 0,
+      };
+    }
     if (existing['folders'] == null) {
       patch['folders'] = {
         'favorites': {'type': 'default'},
@@ -160,6 +237,7 @@ class FirebaseDatabaseImpl implements DatabaseService {
     }
     if (backgroundUrl != null) {
       patch['profile.bannerUrl'] = backgroundUrl;
+      patch['backgroundURL'] = backgroundUrl;
       patch['settings.lastBackgroundChange'] = Timestamp.now();
     }
     if (showcases != null) {

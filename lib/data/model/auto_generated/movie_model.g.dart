@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'movie_model.dart';
+part of '../movie_model.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
@@ -41,13 +41,14 @@ class MovieModelAdapter extends TypeAdapter<MovieModel> {
       total_pages: fields[21] as int?,
       images: (fields[22] as List?)?.cast<dynamic>(),
       providers: fields[23] as dynamic,
+      videos: (fields[24] as List?)?.cast<dynamic>(),
     );
   }
 
   @override
   void write(BinaryWriter writer, MovieModel obj) {
     writer
-      ..writeByte(24)
+      ..writeByte(25)
       ..writeByte(0)
       ..write(obj.adult)
       ..writeByte(1)
@@ -95,7 +96,9 @@ class MovieModelAdapter extends TypeAdapter<MovieModel> {
       ..writeByte(22)
       ..write(obj.images)
       ..writeByte(23)
-      ..write(obj.providers);
+      ..write(obj.providers)
+      ..writeByte(24)
+      ..write(obj.videos);
   }
 
   @override

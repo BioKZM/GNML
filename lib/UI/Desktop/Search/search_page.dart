@@ -6,13 +6,13 @@ import 'package:vault/Logic/bookspage_logic.dart';
 import 'package:vault/Logic/gamepage_logic.dart';
 import 'package:vault/Logic/moviepage_logic.dart';
 import 'package:vault/Logic/seriespage_logic.dart';
-import 'package:vault/UI/Desktop/Details/actors_detail_page.dart';
-import 'package:vault/UI/Desktop/Details/books_detail_page.dart';
-import 'package:vault/UI/Desktop/Details/game_detail_page.dart';
-import 'package:vault/UI/Desktop/Details/movie_detail_page.dart';
-import 'package:vault/UI/Desktop/Details/serie_detail_page.dart';
-import 'package:vault/Widgets/content_builder.dart';
-import 'package:vault/Widgets/generic_content_card.dart';
+import 'package:vault/ui/Desktop/Details/actors_detail_page.dart';
+import 'package:vault/ui/Desktop/Details/books_detail_page.dart';
+import 'package:vault/ui/Desktop/Details/game_detail_page.dart';
+import 'package:vault/ui/Desktop/Details/movie_detail_page.dart';
+import 'package:vault/ui/Desktop/Details/serie_detail_page.dart';
+import 'package:vault/ui/widgets/content_builder.dart';
+import 'package:vault/ui/widgets/generic_content_card.dart';
 import 'package:provider/provider.dart';
 
 enum Buttons { games, movies, series, actors, books }

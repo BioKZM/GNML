@@ -1,4 +1,4 @@
-import 'package:vault/Data/Model/base_content_model.dart';
+import 'package:vault/data/model/base_content_model.dart';
 
 class LibraryItemModel implements BaseContentModel {
   @override
